@@ -64,6 +64,24 @@ void vprintfmt(fmt_callback_t out, void *data, const char *fmt, va_list ap) {
 
 		neg_flag = 0;
 		switch (*fmt) {
+		case 'R': {
+			long num2;
+			print_char(out, data, '(', 1, 0);
+			if (long_flag) {
+                                num = va_arg(ap, long int);
+				num2 = va_arg(ap, long int);
+                        } else {
+                        	num = va_arg(ap, int);
+				num2 = va_arg(ap, int);
+ 			}
+			if (num < 0) num = -num, neg_flag = 1;
+			print_num(out, data, num, 10, neg_flag, width, ladjust, padc, 0);
+			print_char(out, data, ',', 1, 0);
+			if (num2 < 0) num2 = -num2, neg_flag = 1;
+			print_num(out, data, num2, 10, neg_flag, width, ladjust, padc, 0);
+			print_char(out, data, ')', 1, 0);
+			break;
+		}
 		case 'b':
 			if (long_flag) {
 				num = va_arg(ap, long int);
