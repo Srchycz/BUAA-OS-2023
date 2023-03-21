@@ -7,6 +7,7 @@ LEAF(tlb_out)
 	nop
 	/* Step 1: Use 'tlbp' to probe TLB entry */
 	/* Exercise 2.8: Your code here. (1/2) */
+	nop
 	tlbp
 	nop
 	/* Step 2: Fetch the probe result from CP0.Index */
@@ -19,6 +20,7 @@ LEAF(tlb_out)
 	nop
 	/* Step 3: Use 'tlbwi' to write CP0.EntryHi/Lo into TLB at CP0.Index  */
 	/* Exercise 2.8: Your code here. (2/2) */
+	nop
 	tlbwi
 	nop
 
@@ -46,6 +48,8 @@ NESTED(do_tlb_refill, 0, zero)
 	nop
 	/* Hint: use 'tlbwr' to write CP0.EntryHi/Lo into a random tlb entry. */
 	/* Exercise 2.10: Your code here. */
-
+	nop
+	tlbwr
+	nop
 	jr      ra
 END(do_tlb_refill)
