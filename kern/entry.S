@@ -9,10 +9,7 @@ tlb_miss_entry:
 exc_gen_entry:
 	SAVE_ALL
 /* Exercise 3.9: Your code here. */
-.section .text.exc_gen_entry
-exc_gen_entry:
-SAVE_ALL
-mfc0 t0, CP0_CAUSE
-andi t0, 0x7c
-lw t0, exception_handlers(t0)
-jr t0
+	mfc0 t0, CP0_CAUSE
+	andi t0, 0x7c
+	lw t0, exception_handlers(t0)
+	jr t0
