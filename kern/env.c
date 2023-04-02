@@ -156,8 +156,9 @@ void env_init(void) {
 	 * list should be the same as they are in the 'envs' array. */
 
 	/* Exercise 3.1: Your code here. (2/2) */
-	for (i = NENV; i >= 0; --i) {
+	for (i = NENV - 1; i >= 0; --i) {
 		LIST_INSERT_HEAD(&env_free_list, &envs[i], env_link);
+		envs[i].env_status = ENV_FREE;
 	}
 	/*
 	 * We want to map 'UPAGES' and 'UENVS' to *every* user space with PTE_G permission (without
