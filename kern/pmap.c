@@ -20,6 +20,8 @@ u_int page_perm_stat(Pde *pgdir, struct Page *pp, u_int perm_mask) {
 	//*ppte = (Pte *)KADDR(PTE_ADDR(*pgdir_entryp)) + PTX(va);
 	int cnt = 0;
 	for (int i = 0; i < 1024; ++ i) {
+	if (((*(pgdir + i)) & PTE_V) == 0)
+		continue;
 	Pte *entry = (Pte *)KADDR(PTE_ADDR(*(pgdir+i)));
 	for (int i = 0; i < 1024; ++i) {
 		Pte *cur = entry + i;
