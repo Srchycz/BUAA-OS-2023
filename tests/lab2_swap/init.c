@@ -97,7 +97,10 @@ static void swap_test() {
 	printk("2x Page Used\n");
 
 	for (int i = 0; i < 2 * SWAP_NPAGE; i++) {
+		printk("%d\n",i);
 		u_long va = TEST_VA_START + i * BY2PG;
+		printk("v : %s\n",kuseg(va));
+		printk("s: %s\n", s[i]);
 		ensure(strcmp(kuseg(va), s[i]) == 0, "Content[%d] Wrong!", i);
 	}
 
