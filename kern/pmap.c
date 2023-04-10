@@ -250,6 +250,7 @@ int page_insert(Pde *pgdir, u_int asid, struct Page *pp, u_long va, u_int perm) 
 	/* Exercise 2.7: Your code here. (3/3) */
 	*pte = page2pa(pp) | perm | PTE_V;
  	++ (pp -> pp_ref);
+	// printk("map: %x->%x\n", va, page2pa(pp));
 	assert(va2pa(pgdir, va) == page2pa(pp));
 	return 0;
 }
@@ -540,15 +541,21 @@ struct Page *swap_alloc(Pde *pgdir, u_int asid) {
 	// Step 1: Ensure free page
 	if (LIST_EMPTY(&page_free_swapable_list)) {
 		/* Your Code Here (1/3) */
-		struct Page *p = pa2page(SWAP_PAGE_BASE);
+		struct Page *p = pa2page(SWAP_PAGE_BASE);//策略 ：直接取首页
 		u_char *da = disk_alloc();
 		// Pte *pte;
 		for (int i = 0; i < 1024; ++ i) {
+			// if(i==4)
+			// 	printk("%d\n",(pgdir[i] & PTE_V)?1:0);
 			if ((pgdir[i] & PTE_V) == 0)
 				continue;
 			Pte *entry = (Pte *)KADDR(PTE_ADDR(pgdir[i]));
 			for (int j = 0; j < 1024; ++j) {
 				Pte *cur = entry + j;
+				// if(j == 16 && i == 4) {
+				// 	printk("pgdir[4][16]:%x\n",*cur);
+				// 	printk("%d\n",PPN(*cur) == page2ppn(p)?1:0);
+				// }
 				if (PPN(*cur) == page2ppn(p)) {
 					if ((*cur) & PTE_V) {
 						(*cur) = (((Pte)da>>12)<<12) | ((*cur) & (~0xfffff000));
@@ -556,6 +563,7 @@ struct Page *swap_alloc(Pde *pgdir, u_int asid) {
 		               	(*cur) |= PTE_SWP;                
 						// (*cur) |= (((Pte)da>>12)<<12);
 						tlb_invalidate(asid, (i<<22)|(j<<12));
+						// printk("va:%x is swapped out!\n",(i<<22)|(j<<12));
 					}
 				}
 			}
@@ -567,7 +575,6 @@ struct Page *swap_alloc(Pde *pgdir, u_int asid) {
 		// tlb_invalidate(asid, page2kva(p));
 		memcpy(da, (void *)page2kva(p), BY2PG);
 		LIST_INSERT_HEAD(&page_free_swapable_list, p, pp_link);
-		return p;
 	}
 
 	// Step 2: Get a free page and clear it
@@ -629,7 +636,7 @@ static void swap(Pde *pgdir, u_int asid, u_long va) {
 Pte swap_lookup(Pde *pgdir, u_int asid, u_long va) {
 	// Step 1: If corresponding page is swapped out, swap it in
 	if (is_swapped(pgdir, va)) {
-		printk("true\n");
+		//printk("true\n");
 		swap(pgdir, asid, va);
 	}
 
