@@ -625,11 +625,11 @@ static void swap(Pde *pgdir, u_int asid, u_long va) {
 			Pte *cur = entry + j;
 			if (PPN(*cur) == ((u_long)da>>PGSHIFT) && ((*cur) & PTE_SWP)) {          
 				// (*cur) |= page2pa(p);
-				u_long perm = perm = ~PTE_SWP & ((u_long)(*cur)&0xfff) |PTE_V;
-						(*cur) = (page2pa(p)) | perm;
-				// (*cur) = page2pa(p) | ((*pte) & (0xfff));
-				// (*cur) |= PTE_V;
-				// (*cur) &= ~PTE_SWP;
+				// u_long perm = perm = ~PTE_SWP & ((u_long)(*cur)&0xfff) |PTE_V;
+				// 		(*cur) = (page2pa(p)) | perm;
+				(*cur) = page2pa(p) | ((*pte) & (0xfff));
+				(*cur) |= PTE_V;
+				(*cur) &= ~PTE_SWP;
 				tlb_invalidate(asid, (i<<PDSHIFT)|(j<<PGSHIFT));
 			}
 		}
