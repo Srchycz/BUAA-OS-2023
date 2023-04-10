@@ -610,7 +610,7 @@ static void swap(Pde *pgdir, u_int asid, u_long va) {
 	if (pte == NULL) printk("error in swap\n");
 	u_char *da = (u_char *)PTE_ADDR(*pte);
 	memcpy((void *)page2kva(p), da, BY2PG);
-	(*pte) = page2pa(p) | ((*pte) & (~0xfffff000));
+	(*pte) = page2pa(p) | ((*pte) & (0xfff));
 	(*pte) |= PTE_V;
 	(*pte) &= ~PTE_SWP;
 	// (*pte) |= page2pa(p);
@@ -622,10 +622,11 @@ static void swap(Pde *pgdir, u_int asid, u_long va) {
 		Pte *entry = (Pte *)KADDR(PTE_ADDR(pgdir[i]));
 		for (int j = 0; j < 1024; ++j) {
 			Pte *cur = entry + j;
-			if (PPN(*cur) == ((u_long)da>>12)) {
-				(*cur) |= PTE_V; 
-		        (*cur) &= ~PTE_SWP;                
-				(*cur) |= page2pa(p);
+			if (PPN(*cur) == ((u_long)da>>PGSHIFT)) {          
+				// (*cur) |= page2pa(p);
+				(*cur) = page2pa(p) | ((*pte) & (0xfff));
+				(*cur) |= PTE_V;
+				(*cur) &= ~PTE_SWP;
 				tlb_invalidate(asid, (i<<22)|(j<<12));
 			}
 		}
