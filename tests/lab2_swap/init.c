@@ -70,39 +70,71 @@ const char *s[] = {
 
 static void swap_test_self()
 {
-	printk("TEST BEGIN\n");
-	u_long va;
-	struct Page *pp;
-	struct Page *p = NULL;
-	assert(page_alloc(&p) == 0);
-	cur_pgdir = (Pde *)page2kva(p);
+	printk("Swap Test Begin.\n");
+	// Step 1: Alloc Page Directory
+	struct Page *pp = NULL;
+	struct Page *pm = pa2page(SWAP_PAGE_BASE + BY2PG);
+	assert(page_alloc(&pp) == 0);
+	cur_pgdir = (Pde *)page2kva(pp);
 
-	for (int i = 0; i < SWAP_NPAGE; i++)
-	{
-		va = TEST_VA_START + i * BY2PG;
-		pp = swap_alloc(cur_pgdir, 0);
+	// Map All Pages
+	for (int i = 0; i < SWAP_NPAGE; i++) {
+		u_long va = TEST_VA_START + i * BY2PG;
+		struct Page *pp = swap_alloc(cur_pgdir, 0);
 		assert(pp != NULL);
 		assert(page_insert(cur_pgdir, 0, pp, va, PTE_D) == 0);
 		strcpy(kuseg(va), s[i]);
+		// printk("%d | va->pa: %x -> %x\n",i, va, page2pa(pp));
+	}
+	printk("1x Page Used\n");
+
+	// Multimap va -> pa
+	for (int i = SWAP_NPAGE; i < 20; i++) {
+		u_long va = TEST_VA_START + i * BY2PG;
+		// struct Page *pp = swap_alloc(cur_pgdir, 0);
+		// assert(pp != NULL);
+		assert(page_insert(cur_pgdir, 0, pp, va, PTE_D) == 0);
+		//printk("%d | va->pa: %x -> %x\n",i, va, page2pa(pp));
+		// printk("pgdir[%d][%d]\n",PDX(va),PTX(va));
+		// strcpy(kuseg(va), s[i]);
 	}
 
-    // 在内存满(指可交换内存满)的情况下，建立va到pa的映射
-	va = TEST_VA_START + 16 * BY2PG; // va = 0x1010000
-	pp = swap_alloc(cur_pgdir, 0);
-	assert(pp != NULL);
-	assert(page_insert(cur_pgdir, 0, pp, va, PTE_D) == 0);
-	strcpy(kuseg(va), s[16]);
-
-	// pgdir_walk简化版,把注释删了可用于debug
-	// Pte *entry=(Pte*)KADDR(PTE_ADDR((*(cur_pgdir+PDX(va)))))+PTX(va);
-	// printk("entry=%x ppn=%x sign=%x\n",entry,(u_long)(*entry)>>12,(u_long)(*entry) & 0xfff);
-    
-	for (int i = 0; i < 16; i++)
-	{
+	for (int i = 20; i < 2 * SWAP_NPAGE; i++) {
 		u_long va = TEST_VA_START + i * BY2PG;
+		struct Page *pp = swap_alloc(cur_pgdir, 0);
+		assert(pp != NULL);
+		assert(page_insert(cur_pgdir, 0, pp, va, PTE_D) == 0);
+		//printk("%d | va->pa: %x -> %x\n",i, va, page2pa(pp));
+		// printk("pgdir[%d][%d]\n",PDX(va),PTX(va));
+		strcpy(kuseg(va), s[i]);
+	}
+
+	printk("2x Page Used\n");
+
+	for (int i = 0; i < SWAP_NPAGE; i++) {
+		// printk("%d\n",i);
+		u_long va = TEST_VA_START + i * BY2PG;
+		// printk("v : %s\n",kuseg(va));
+		// printk("s: %s\n", s[i]);
 		ensure(strcmp(kuseg(va), s[i]) == 0, "Content[%d] Wrong!", i);
 	}
-	printk("TEST END\n");
+	for (int i = SWAP_NPAGE; i < 20; i++) {
+		u_long va = TEST_VA_START + i * BY2PG;
+		// struct Page *pp = swap_alloc(cur_pgdir, 0);
+		// assert(pp != NULL);
+		//printk("%d | va->pa: %x -> %x\n",i, va, page2pa(pp));
+		// printk("pgdir[%d][%d]\n",PDX(va),PTX(va));
+		ensure(strcmp(kuseg(va), s[15]) == 0, "MultiContent[%d] Wrong!", i);
+	}
+	for (int i = 20; i < 2 * SWAP_NPAGE; i++) {
+		// printk("%d\n",i);
+		u_long va = TEST_VA_START + i * BY2PG;
+		// printk("v : %s\n",kuseg(va));
+		// printk("s: %s\n", s[i]);
+		ensure(strcmp(kuseg(va), s[i]) == 0, "Content[%d] Wrong!", i);
+	}
+
+	printk("Congratulation!\n\n");
 }
 static void swap_test() {
 	printk("Swap Test Begin.\n");
