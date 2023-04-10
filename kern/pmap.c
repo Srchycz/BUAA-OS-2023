@@ -558,11 +558,11 @@ struct Page *swap_alloc(Pde *pgdir, u_int asid) {
 				// }
 				if (PPN(*cur) == page2ppn(p)) {
 					if ((*cur) & PTE_V) {
-						u_long perm = perm = ~PTE_V & ((u_long)(*cur)&0xfff) |PTE_SWP;
-						(*cur) = (((Pte)da/BY2PG)<<12) | perm;
-						// (*cur) = (((Pte)da>>12)<<12) | ((*cur) & 0xfff);
-						// (*cur) &= (~PTE_V); 
-		               	// (*cur) |= PTE_SWP;                
+						// u_long perm = perm = ~PTE_V & ((u_long)(*cur)&0xfff) |PTE_SWP;
+						// (*cur) = (((Pte)da/BY2PG)<<12) | perm;
+						(*cur) = (((Pte)da>>12)<<12) | ((*cur) & 0xfff);
+						(*cur) &= (~PTE_V); 
+		               	(*cur) |= PTE_SWP;                
 						// (*cur) |= (((Pte)da>>12)<<12);
 						tlb_invalidate(asid, (i<<PDSHIFT)|(j<<PGSHIFT));
 						// printk("va:%x is swapped out!\n",(i<<22)|(j<<12));
@@ -612,9 +612,9 @@ static void swap(Pde *pgdir, u_int asid, u_long va) {
 	if (pte == NULL) printk("error in swap\n");
 	u_char *da = (u_char *)PTE_ADDR(*pte);
 	memcpy((void *)page2kva(p), da, BY2PG);
-	// (*pte) = page2pa(p) | ((*pte) & (0xfff));// 对于页号段只能采用赋值的方式（因为要完全覆盖）
-	// (*pte) |= PTE_V;
-	// (*pte) &= ~PTE_SWP;
+	(*pte) = page2pa(p) | ((*pte) & (0xfff));// 对于页号段只能采用赋值的方式（因为要完全覆盖）
+	(*pte) |= PTE_V;
+	(*pte) &= ~PTE_SWP;
 	tlb_invalidate(asid, va);
 	// printk("%x\n",*pte);
 	for (int i = 0; i < 1024; ++ i) {
@@ -627,7 +627,7 @@ static void swap(Pde *pgdir, u_int asid, u_long va) {
 				// (*cur) |= page2pa(p);
 				// u_long perm = perm = ~PTE_SWP & ((u_long)(*cur)&0xfff) |PTE_V;
 				// 		(*cur) = (page2pa(p)) | perm;
-				(*cur) = page2pa(p) | ((*pte) & (0xfff));
+				(*cur) = page2pa(p) | ((*cur) & (0xfff));
 				(*cur) |= PTE_V;
 				(*cur) &= ~PTE_SWP;
 				tlb_invalidate(asid, (i<<PDSHIFT)|(j<<PGSHIFT));
