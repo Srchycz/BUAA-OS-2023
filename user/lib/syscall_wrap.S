@@ -2,7 +2,7 @@
 
 LEAF(msyscall)
 	// Just use 'syscall' instruction and return.
-
+	syscall
 	/* Exercise 4.1: Your code here. */
 
 END(msyscall)

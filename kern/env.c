@@ -119,6 +119,12 @@ int envid2env(u_int envid, struct Env **penv, int checkperm) {
 	 *   You may want to use 'ENVX'.
 	 */
 	/* Exercise 4.3: Your code here. (1/2) */
+	if (envid == 0) {
+		e = curenv;
+	}
+	else {
+		e = &envs[ENVX(envid)];
+	}
 
 	if (e->env_status == ENV_FREE || e->env_id != envid) {
 		return -E_BAD_ENV;
@@ -131,7 +137,10 @@ int envid2env(u_int envid, struct Env **penv, int checkperm) {
 	 *   If violated, return '-E_BAD_ENV'.
 	 */
 	/* Exercise 4.3: Your code here. (2/2) */
-
+	if(checkperm != 0) {
+		if(e != curenv && e->env_parent_id != curenv->env_id) 
+			return -E_BAD_ENV;
+	}
 	/* Step 3: Assign 'e' to '*penv'. */
 	*penv = e;
 	return 0;
@@ -240,7 +249,7 @@ int env_alloc(struct Env **new, u_int parent_id) {
 	}
 	/* Step 2: Call a 'env_setup_vm' to initialize the user address space for this new Env. */
 	/* Exercise 3.4: Your code here. (2/4) */
-	env_setup_vm(e);
+	try(env_setup_vm(e));
 	/* Step 3: Initialize these fields for the new Env with appropriate values:
 	 *   'env_user_tlb_mod_entry' (lab4), 'env_runs' (lab6), 'env_id' (lab3), 'env_asid' (lab3),
 	 *   'env_parent_id' (lab3)
@@ -253,9 +262,7 @@ int env_alloc(struct Env **new, u_int parent_id) {
 	e->env_runs = 0;	       // for lab6
 	/* Exercise 3.4: Your code here. (3/4) */
 	e->env_id = mkenvid(e);
-	if(asid_alloc(&e->env_asid) == -E_NO_FREE_ENV) {
-		return -E_NO_FREE_ENV;
-	}
+	try(asid_alloc(&e->env_asid));
 	e->env_parent_id = parent_id;
 	/* Step 4: Initialize the sp and 'cp0_status' in 'e->env_tf'. */
 	// Timer interrupt (STATUS_IM4) will be enabled.
