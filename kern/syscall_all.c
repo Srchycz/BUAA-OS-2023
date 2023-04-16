@@ -140,7 +140,7 @@ int sys_mem_alloc(u_int envid, u_int va, u_int perm) {
 
 	/* Step 1: Check if 'va' is a legal user virtual address using 'is_illegal_va'. */
 	/* Exercise 4.4: Your code here. (1/3) */
-	try(is_illegal_va(va));
+	if(is_illegal_va(va)) return -E_INVAL;
 	/* Step 2: Convert the envid to its corresponding 'struct Env *' using 'envid2env'. */
 	/* Hint: **Always** validate the permission in syscalls! */
 	/* Exercise 4.4: Your code here. (2/3) */
@@ -174,7 +174,7 @@ int sys_mem_map(u_int srcid, u_int srcva, u_int dstid, u_int dstva, u_int perm) 
 	/* Step 1: Check if 'srcva' and 'dstva' are legal user virtual addresses using
 	 * 'is_illegal_va'. */
 	/* Exercise 4.5: Your code here. (1/4) */
-	try(is_illegal_va(srcva));
+	if(is_illegal_va(srcva) || is_illegal_va(dstva)) return -E_INVAL;
 	/* Step 2: Convert the 'srcid' to its corresponding 'struct Env *' using 'envid2env'. */
 	/* Exercise 4.5: Your code here. (2/4) */
 	try(envid2env(srcid, &srcenv, 1));
@@ -205,7 +205,7 @@ int sys_mem_unmap(u_int envid, u_int va) {
 
 	/* Step 1: Check if 'va' is a legal user virtual address using 'is_illegal_va'. */
 	/* Exercise 4.6: Your code here. (1/2) */
-	try(is_illegal_va(va));
+	if(is_illegal_va(va)) return -E_INVAL;
 	/* Step 2: Convert the envid to its corresponding 'struct Env *' using 'envid2env'. */
 	/* Exercise 4.6: Your code here. (2/2) */
 	try(envid2env(envid, &e, 1));
@@ -490,7 +490,7 @@ void do_syscall(struct Trapframe *tf) {
 
 	/* Step 1: Add the EPC in 'tf' by a word (size of an instruction). */
 	/* Exercise 4.2: Your code here. (1/4) */
-	tf->cp0_epc += (__WINT_WIDTH__ / __CHAR_BIT__);
+	tf->cp0_epc += 4;// (__WINT_WIDTH__ / __CHAR_BIT__);
 	/* Step 2: Use 'sysno' to get 'func' from 'syscall_table'. */
 	/* Exercise 4.2: Your code here. (2/4) */
 	func = syscall_table[sysno];
@@ -502,8 +502,10 @@ void do_syscall(struct Trapframe *tf) {
 	/* Step 4: Last 2 args are stored in stack at [$sp + 16 bytes], [$sp + 20 bytes]. */
 	u_int arg4, arg5;
 	/* Exercise 4.2: Your code here. (3/4) */
-	arg4 = *((u_int *)(tf->regs[29]) + 4);
-	arg5 = *((u_int *)(tf->regs[29]) + 5);
+	// arg4 = *((u_int *)(tf->regs[29]) + 4);
+	// arg5 = *((u_int *)(tf->regs[29]) + 5);
+	arg4 = *((u_int *)(tf->regs[29] + 16));
+	arg5 = *((u_int *)(tf->regs[29] + 20));
 	/* Step 5: Invoke 'func' with retrieved arguments and store its return value to $v0 in 'tf'.
 	 */
 	/* Exercise 4.2: Your code here. (4/4) */

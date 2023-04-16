@@ -36,13 +36,13 @@ void schedule(int yield) {
 	 */
 	/* Exercise 3.12: Your code here. */
 	--count;
-	if (yield || count == 0 || e == NULL || e->env_status == ENV_NOT_RUNNABLE) {
+	if (yield || count == 0 || e == NULL || e->env_status != ENV_RUNNABLE) {
 		if (e != NULL && e->env_status == ENV_RUNNABLE) {
+			TAILQ_REMOVE(&env_sched_list, e, env_sched_link);
 			TAILQ_INSERT_TAIL(&env_sched_list, e, env_sched_link);
 		}
 		panic_on(TAILQ_EMPTY(&env_sched_list));
 		e = TAILQ_FIRST(&env_sched_list);
-		TAILQ_REMOVE(&env_sched_list, e, env_sched_link);
 		count = e->env_pri;
 		env_run(e);
 	}
