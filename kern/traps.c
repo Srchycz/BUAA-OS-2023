@@ -33,8 +33,11 @@ void do_reserved(struct Trapframe *tf) {
 
 void do_ov(struct Trapframe *tf) {
 	unsigned long epc = tf->cp0_epc;
-	u_int *addr = (u_int *)KADDR(va2pa(cur_pgdir, epc));
+	//if (va2pa(cur_pgdir, epc) == ~0)
+	//	printk("Error!\n");
+	u_int *addr = (u_int *)(KADDR(va2pa(cur_pgdir, epc)) | (epc & 0x3FF));
 	u_int instr = *addr;
+	//printk("Ov! %x\n", instr);
 	if ((instr>>26) == 0) {
 		if( (instr & 2) == 0) {
 			printk("add ov handled\n");
@@ -43,6 +46,7 @@ void do_ov(struct Trapframe *tf) {
 			printk("sub ov handled\n");
 		}
 		instr |= 1;
+		*addr = instr;
 	}
 	else {
 		printk("addi ov handled\n");

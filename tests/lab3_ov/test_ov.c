@@ -1,6 +1,7 @@
 int main() {
 	unsigned int src1, src2, dst;
-
+	
+	//printk("start test\n");
 	/*
 	 * 测试 add
 	 */
