@@ -6,6 +6,7 @@ const int PPC = 0x1001;
 int main() {
 	int me, r;
 	me = syscall_getenvid();
+	// debugf("%x %x %x\n",me,me,0xf);
 	debugf("i am %x\n", me);
 	r = syscall_mem_alloc(me, (void *)UTOP, 0); // va illegal
 	if (r < 0) {
