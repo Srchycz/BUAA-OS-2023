@@ -17,7 +17,8 @@
 void schedule(int yield) {
 	static int count = 0; // remaining time slices of current env
 	struct Env *e = curenv;
-
+	
+	static int tim[8] = {0};
 	/* We always decrease the 'count' by 1.
 	 *
 	 * If 'yield' is set, or 'count' has been decreased to 0, or 'e' (previous 'curenv') is
@@ -35,17 +36,36 @@ void schedule(int yield) {
 	 *   'TAILQ_FIRST', 'TAILQ_REMOVE', 'TAILQ_INSERT_TAIL'
 	 */
 	/* Exercise 3.12: Your code here. */
-	--count;
 	if (yield || count == 0 || e == NULL || e->env_status == ENV_NOT_RUNNABLE) {
 		if (e != NULL && e->env_status == ENV_RUNNABLE) {
 			TAILQ_REMOVE(&env_sched_list, e, env_sched_link);
 			TAILQ_INSERT_TAIL(&env_sched_list, e, env_sched_link);
+			tim[e->env_user] += e->env_pri;
 		}
 		panic_on(TAILQ_EMPTY(&env_sched_list));
-		e = TAILQ_FIRST(&env_sched_list);
+		struct Env *i;
+		int tempcnt = 0xffffff;
+		int tempusr = 6;
+		TAILQ_FOREACH(i, &env_sched_list, env_sched_link) {
+			if (tempcnt >= tim[i->env_user]) {
+				if(tempcnt == tim[i->env_user] && tempusr > i->env_user) {
+					tempcnt = tim[i->env_user];
+					tempusr = i->env_user;
+				}
+				else if(tempcnt > tim[i->env_user]) {
+					tempcnt = tim[i->env_user];
+					tempusr = i->env_user;
+				}
+			}
+		}
+		TAILQ_FOREACH(i, &env_sched_list, env_sched_link) {
+			if (i->env_user == tempusr) {
+				e = i;
+				break;
+			}
+		}
 		count = e->env_pri;
-		env_run(e);
 	}
-	else
-		env_run(e);
+	--count;
+	env_run(e);
 }
