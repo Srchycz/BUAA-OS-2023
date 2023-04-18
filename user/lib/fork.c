@@ -21,23 +21,30 @@ static void __attribute__((noreturn)) cow_entry(struct Trapframe *tf) {
 	/* Hint: Use 'vpt' and 'VPN' to find the page table entry. If the 'perm' doesn't have
 	 * 'PTE_COW', launch a 'user_panic'. */
 	/* Exercise 4.13: Your code here. (1/6) */
-
+	Pte *pte = &vpt[(va>>12)];
+	perm = ((*pte) & 0xFFF);
+	// if (perm & PTE_COW == 0)
+	// 	user_panic();
 	/* Step 2: Remove 'PTE_COW' from the 'perm', and add 'PTE_D' to it. */
 	/* Exercise 4.13: Your code here. (2/6) */
-
+	perm &= ~PTE_COW;
+	perm |= PTE_D;
+	*pte |= perm;
 	/* Step 3: Allocate a new page at 'UCOW'. */
 	/* Exercise 4.13: Your code here. (3/6) */
-
+	struct Page *p;
+	// page_alloc(&p);
+	// page_insert(cur_pgdir, curenv->env_asid, p, UCOW, perm);
 	/* Step 4: Copy the content of the faulting page at 'va' to 'UCOW'. */
 	/* Hint: 'va' may not be aligned to a page! */
 	/* Exercise 4.13: Your code here. (4/6) */
-
+	// memcpy((void *)UCOW, ROUND(va, BY2PG), BY2PG);
 	// Step 5: Map the page at 'UCOW' to 'va' with the new 'perm'.
 	/* Exercise 4.13: Your code here. (5/6) */
-
+	// page_insert(cur_pgdir, curenv->env_asid, p, va, perm);
 	// Step 6: Unmap the page at 'UCOW'.
 	/* Exercise 4.13: Your code here. (6/6) */
-
+	// page_remove(cur_pgdir, curenv->env_asid, UCOW);
 	// Step 7: Return to the faulting routine.
 	int r = syscall_set_trapframe(0, tf);
 	user_panic("syscall_set_trapframe returned %d", r);
@@ -131,6 +138,7 @@ int fork(void) {
 	 *   Child's TLB Mod user exception entry should handle COW, so set it to 'cow_entry'
 	 */
 	/* Exercise 4.15: Your code here. (2/2) */
-
+	syscall_set_tlb_mod_entry(child, cow_entry);
+	syscall_set_env_status(child, ENV_RUNNABLE);
 	return child;
 }
