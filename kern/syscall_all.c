@@ -134,7 +134,6 @@ static inline int is_illegal_va_range(u_long va, u_int len) {
  *   'envid2env', 'page_alloc', 'page_insert', 'try' (macro)
  */
 int sys_mem_alloc(u_int envid, u_int va, u_int perm) {
-	printk("envid: %d  *va:%x perm:%d\n", envid, va, perm);
 	struct Env *env;
 	struct Page *pp;
 
@@ -170,7 +169,6 @@ int sys_mem_map(u_int srcid, u_int srcva, u_int dstid, u_int dstva, u_int perm) 
 	struct Env *srcenv;
 	struct Env *dstenv;
 	struct Page *pp;
-
 	/* Step 1: Check if 'srcva' and 'dstva' are legal user virtual addresses using
 	 * 'is_illegal_va'. */
 	/* Exercise 4.5: Your code here. (1/4) */
@@ -236,7 +234,8 @@ int sys_exofork(void) {
 	try(env_alloc(&e, curenv->env_id));
 	/* Step 2: Copy the current Trapframe below 'KSTACKTOP' to the new env's 'env_tf'. */
 	/* Exercise 4.9: Your code here. (2/4) */
-	e->env_tf = curenv->env_tf;
+	// e->env_tf = curenv->env_tf;
+	e->env_tf = *((struct Trapframe *)KSTACKTOP - 1);
 	/* Step 3: Set the new env's 'env_tf.regs[2]' to 0 to indicate the return value in child. */
 	/* Exercise 4.9: Your code here. (3/4) */
 	e->env_tf.regs[2] = 0;
@@ -275,7 +274,7 @@ int sys_set_env_status(u_int envid, u_int status) {
 		TAILQ_REMOVE(&env_sched_list, env, env_sched_link);
 	}
 	else if (env->env_status != ENV_RUNNABLE && status == ENV_RUNNABLE) {
-		TAILQ_INSERT_HEAD(&env_sched_list, env, env_sched_link);
+		TAILQ_INSERT_TAIL(&env_sched_list, env, env_sched_link);
 	}
 	/* Step 4: Set the 'env_status' of 'env'. */
 	env->env_status = status;

@@ -21,30 +21,28 @@ static void __attribute__((noreturn)) cow_entry(struct Trapframe *tf) {
 	/* Hint: Use 'vpt' and 'VPN' to find the page table entry. If the 'perm' doesn't have
 	 * 'PTE_COW', launch a 'user_panic'. */
 	/* Exercise 4.13: Your code here. (1/6) */
-	Pte *pte = &vpt[(va>>12)];
+	Pte *pte = &(vpt[VPN(va)]);
 	perm = ((*pte) & 0xFFF);
-	// if (perm & PTE_COW == 0)
-	// 	user_panic();
+	if ((perm & PTE_COW) == 0)
+	 	user_panic("error");
 	/* Step 2: Remove 'PTE_COW' from the 'perm', and add 'PTE_D' to it. */
 	/* Exercise 4.13: Your code here. (2/6) */
 	perm &= ~PTE_COW;
 	perm |= PTE_D;
-	*pte |= perm;
+	// *pte |= perm;
 	/* Step 3: Allocate a new page at 'UCOW'. */
 	/* Exercise 4.13: Your code here. (3/6) */
-	struct Page *p;
-	// page_alloc(&p);
-	// page_insert(cur_pgdir, curenv->env_asid, p, UCOW, perm);
+	syscall_mem_alloc(0, (void *)UCOW, perm);
 	/* Step 4: Copy the content of the faulting page at 'va' to 'UCOW'. */
 	/* Hint: 'va' may not be aligned to a page! */
 	/* Exercise 4.13: Your code here. (4/6) */
-	// memcpy((void *)UCOW, ROUND(va, BY2PG), BY2PG);
+	memcpy((void *)UCOW, (void *)ROUNDDOWN(va, BY2PG), BY2PG);
 	// Step 5: Map the page at 'UCOW' to 'va' with the new 'perm'.
 	/* Exercise 4.13: Your code here. (5/6) */
-	// page_insert(cur_pgdir, curenv->env_asid, p, va, perm);
+	syscall_mem_map(0, (void *)UCOW, 0, (void *)va, perm);
 	// Step 6: Unmap the page at 'UCOW'.
 	/* Exercise 4.13: Your code here. (6/6) */
-	// page_remove(cur_pgdir, curenv->env_asid, UCOW);
+	syscall_mem_unmap(0, (void *)UCOW);
 	// Step 7: Return to the faulting routine.
 	int r = syscall_set_trapframe(0, tf);
 	user_panic("syscall_set_trapframe returned %d", r);
@@ -73,17 +71,16 @@ static void __attribute__((noreturn)) cow_entry(struct Trapframe *tf) {
  *     'sys_mem_map' in kernel.
  */
 static void duppage(u_int envid, u_int vpn) {
-	int r;
+	int r = 0;
 	u_int addr;
 	u_int perm;
-
 	/* Step 1: Get the permission of the page. */
 	/* Hint: Use 'vpt' to find the page table entry. */
 	/* Exercise 4.10: Your code here. (1/2) */
 	addr = vpn * BY2PG;
 	// Pte *pte = (Pte *)KADDR(PTE_ADDR(vpd[PDX(vpn<<12)])) + PTX(vpn<<12);
 	Pte *pte = &(vpt[vpn]);
-	perm = (*pte) & 0x03FF;
+	perm = (*pte) & 0x0FFF;
 	/* Step 2: If the page is writable, and not shared with children, and not marked as COW yet,
 	 * then map it as copy-on-write, both in the parent (0) and the child (envid). */
 	/* Hint: The page should be first mapped to the child before remapped in the parent. (Why?)
@@ -92,9 +89,11 @@ static void duppage(u_int envid, u_int vpn) {
 	if ((perm & PTE_D) && !(perm & PTE_LIBRARY) && !(perm & PTE_COW)) {
 		perm |= PTE_COW;
 		perm &= ~PTE_D;
+		r = 1;
 	}
 	syscall_mem_map(0, addr, envid, addr, perm);
-	syscall_mem_map(0, addr, 0, addr, perm);
+	if (r)
+		syscall_mem_map(0, addr, 0, addr, perm);
 }
 
 /* Overview:
@@ -131,6 +130,11 @@ int fork(void) {
 	// Hint: You should use 'duppage'.
 	/* Exercise 4.15: Your code here. (1/2) */
 
+	for(i = 0; i < VPN(USTACKTOP); ++i) {
+		if ((vpt[i] & PTE_V) && (vpd[i>>10] & PTE_V)) {
+			duppage(child, i);
+		}
+	}
 	/* Step 4: Set up the child's tlb mod handler and set child's 'env_status' to
 	 * 'ENV_RUNNABLE'. */
 	/* Hint:
