@@ -37,3 +37,32 @@ u_int ipc_recv(u_int *whom, void *dstva, u_int *perm) {
 
 	return env->env_ipc_value;
 }
+
+u_int fa_id[100], tot = 0;
+void ipc_broadcast(u_int val, void * srcva, u_int perm) {
+	u_int me = syscall_getenvid();
+	struct Env *curenv = &envs[ENVX(me)];
+	fa_id[tot++] = curenv->env_id;
+	int r;
+	for (int i=0; i < NENV; ++i) {
+		struct Env *e = &(envs[i]);
+		if (e->env_status == ENV_FREE)
+			continue;
+		int flag=0;
+		for(int j=0; j < tot; ++j) {
+			if(fa_id[j] == e->env_parent_id) {
+				flag=1;
+				break;
+			}
+		}
+		if (flag) {
+			fa_id[tot++] = e->env_id;
+			u_int whom = e->env_id;
+			while ((r = syscall_ipc_try_send(whom, val, srcva, perm)) == -E_IPC_NOT_RECV) {
+			 syscall_yield();
+         		}
+			user_assert(r == 0);
+		}
+		
+	}
+}

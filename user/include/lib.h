@@ -37,6 +37,7 @@ void _user_halt(const char *, int, const char *, ...) __attribute__((noreturn));
 			user_panic("'" #expr "' returned %d", r);                                  \
 		}                                                                                  \
 	} while (0)
+void ipc_broadcast(u_int val, void * srcva, u_int perm);
 
 /// fork, spawn
 int spawn(char *prog, char **argv);
