@@ -28,21 +28,21 @@ int sys_barrier_wait() {
 		*(curenv->bar) -= 1;
 		if (*(curenv->bar) == 0) {
                 	curenv->isbar = 0;
-			//for(int i = 1; i <= tot; ++ i) {
-				//struct Env *e = blocked_env[i];
-				//e->env_status = ENV_RUNNABLE;
-				//TAILQ_INSERT_TAIL(&env_sched_list, e, env_sched_link);
+			for(int i = 1; i <= tot; ++ i) {
+				struct Env *e = blocked_env[i];
+				e->env_status = ENV_RUNNABLE;
+				TAILQ_INSERT_TAIL(&env_sched_list, e, env_sched_link);
 				//env_run(e);
-			//}
-			//tot = 0;
+			}
+			tot = 0;
                 	return 0;
  		}
 	}
 	curenv->isbar = 1;
-	//blocked_env[++tot] = curenv;
-	//curenv->env_status = ENV_NOT_RUNNABLE;
-	//TAILQ_REMOVE(&env_sched_list, curenv, env_sched_link);
-	//schedule(1);
+	blocked_env[++tot] = curenv;
+	curenv->env_status = ENV_NOT_RUNNABLE;
+	TAILQ_REMOVE(&env_sched_list, curenv, env_sched_link);
+	schedule(1);
 	return 1;
 }
 
