@@ -4,6 +4,8 @@
 #ifndef __ASSEMBLER__
 
 enum {
+	SYS_barrier_alloc,
+	SYS_barrier_wait,
 	SYS_putchar,
 	SYS_print_cons,
 	SYS_getenvid,

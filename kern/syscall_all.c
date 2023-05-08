@@ -8,6 +8,31 @@
 
 extern struct Env *curenv;
 
+u_int bbb;
+//exam
+void sys_barrier_alloc(int n) {
+	bbb = n;
+	curenv->bar = &bbb;
+}
+int sys_barrier_wait() {
+	if (curenv->bar == NULL) {
+		printk("NULL Bar!\n");
+	}
+	if (*(curenv->bar) == 0) {
+		curenv->isbar = 0;
+		return 0;
+	}
+	if (curenv->isbar == 0) {
+		*(curenv->bar) -= 1;
+		if (*(curenv->bar) == 0) {
+                	 curenv->isbar = 0;
+                	 return 0;
+ 		}
+	}
+	curenv->isbar = 1;
+	return 1;
+}
+
 /* Overview:
  * 	This function is used to print a character on screen.
  *
@@ -243,6 +268,7 @@ int sys_exofork(void) {
 	/* Exercise 4.9: Your code here. (4/4) */
 	e->env_status = ENV_NOT_RUNNABLE;
 	e->env_pri = curenv->env_pri;
+	e->bar = curenv->bar;
 	return e->env_id;
 }
 
@@ -463,6 +489,8 @@ int sys_read_dev(u_int va, u_int pa, u_int len) {
 }
 
 void *syscall_table[MAX_SYSNO] = {
+    [SYS_barrier_alloc] = sys_barrier_alloc,
+    [SYS_barrier_wait] = sys_barrier_wait,
     [SYS_putchar] = sys_putchar,
     [SYS_print_cons] = sys_print_cons,
     [SYS_getenvid] = sys_getenvid,
