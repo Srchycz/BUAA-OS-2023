@@ -16,9 +16,10 @@
 #define ENV_NOT_RUNNABLE 2
 
 struct Sem {
-	char *name;
+	char name[40];
 	int val;
 	int checkperm;
+	int env_id;
 }
 
 struct Env {
