@@ -443,10 +443,12 @@ int sys_cgetc(void) {
  */
 int sys_write_dev(u_int va, u_int pa, u_int len) {
 	/* Exercise 5.1: Your code here. (1/2) */
-	if(is_illegal_va_range(va, len)) return -E_INVAL;
-	if((DEV_CONS_ADDRESS <= pa && pa + len < DEV_CONS_ADDRESS + DEV_CONS_LENGTH) ||
-	   (DEV_DISK_ADDRESS <= pa && pa + len < DEV_DISK_ADDRESS + DEV_DISK_BUFFER + DEV_DISK_BUFFER_LEN) ||
-	   (DEV_RTC_ADDRESS <= pa && pa + len < DEV_RTC_LENGTH)) {
+	if(is_illegal_va_range(va, len)) {
+		return -E_INVAL;
+	}
+	if((DEV_CONS_ADDRESS <= pa && pa + len <= DEV_CONS_ADDRESS + DEV_CONS_LENGTH) ||
+	   (DEV_DISK_ADDRESS <= pa && pa + len <= DEV_DISK_ADDRESS + DEV_DISK_BUFFER + DEV_DISK_BUFFER_LEN) ||
+	   (DEV_RTC_ADDRESS <= pa && pa + len <= DEV_RTC_ADDRESS + DEV_RTC_LENGTH)) {
 		memcpy((void *)(pa + KSEG1), (void *)va, len);
 		return 0;
 	}
@@ -467,9 +469,9 @@ int sys_write_dev(u_int va, u_int pa, u_int len) {
 int sys_read_dev(u_int va, u_int pa, u_int len) {
 	/* Exercise 5.1: Your code here. (2/2) */
 	if(is_illegal_va_range(va, len)) return -E_INVAL;
-	if((DEV_CONS_ADDRESS <= pa && pa + len < DEV_CONS_ADDRESS + DEV_CONS_LENGTH) ||
-	   (DEV_DISK_ADDRESS <= pa && pa + len < DEV_DISK_ADDRESS + DEV_DISK_BUFFER + DEV_DISK_BUFFER_LEN) ||
-	   (DEV_RTC_ADDRESS <= pa && pa + len < DEV_RTC_LENGTH)) {
+	if((DEV_CONS_ADDRESS <= pa && pa + len <= DEV_CONS_ADDRESS + DEV_CONS_LENGTH) ||
+	   (DEV_DISK_ADDRESS <= pa && pa + len <= DEV_DISK_ADDRESS + DEV_DISK_BUFFER + DEV_DISK_BUFFER_LEN) ||
+	   (DEV_RTC_ADDRESS <= pa && pa + len <= DEV_RTC_ADDRESS + DEV_RTC_LENGTH)) {
 		memcpy((void *)va, (void *)(pa + KSEG1), len);
 		return 0;
 	}
