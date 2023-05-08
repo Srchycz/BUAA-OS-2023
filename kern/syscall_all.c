@@ -8,6 +8,65 @@
 
 extern struct Env *curenv;
 
+struct Sem sem[20];
+int tot;
+int checkp(int fid, int me){
+	if (me == fid) return 1;
+	struct Env *e = &envs[ENVX(me)];
+	while (e && e->env_status != ENV_FREE && e->parent_id != 0 && e->parent_id != e->env_id) {
+		if (e->parent_id == fid)
+			return 1;
+		e = &envs[ENVX(e->parent_id];
+	}
+	return 0;
+}
+int sem_init(const char *name, int init_value, int checkperm){
+	++tot;
+	if(tot > 10) return -E_NO_SEM;
+	strcpy(sem[tot].name, name);
+	sem[tot].val = init_value;
+	sem[tot].checkperm = checkperm;
+	sem[tot].env_id = curenv->env_id;
+	return 0;
+}
+int sem_wait(int sem_id) {
+	if(sem_id <= 0 || sem_id > tot)
+		return -E_NO_SEM;
+	if (sem[sem_id].checkperm) {
+		if(!checkp(sem[sem_id].env_id, curenv->env_id))
+			return -E_NO_SEM;
+	}
+	if (sem[sem_id].val > 0)
+		-- sem[sem_id].val;
+	else
+
+	return 0;
+}
+int sem_post(int sem_id) {
+	if(sem_id <= 0 || sem_id > tot)
+                  return -E_NO_SEM;
+         if (sem[sem_id].checkperm) {
+                 if(!checkp(sem[sem_id].env_id, curenv->env_id))
+                         return -E_NO_SEM;
+          }
+}
+int sem_getvalue(int sem_id) {
+	if(sem_id <= 0 || sem_id > tot)
+		return -E_NO_SEM;
+	if (sem[sem_id].checkperm) {
+                 if(!checkp(sem[sem_id].env_id, curenv->env_id))
+                         return -E_NO_SEM;
+         }
+	 return sem[sem_id].value;
+}
+int sem_getid(const char *name) {
+	for(int i=1; i<=tot; ++i) {
+		if (strcmp(sem[i].name, name) == 0)
+			return i;
+	}
+	return -E_NO_SEM;
+}
+
 /* Overview:
  * 	This function is used to print a character on screen.
  *
@@ -463,6 +522,11 @@ int sys_read_dev(u_int va, u_int pa, u_int len) {
 }
 
 void *syscall_table[MAX_SYSNO] = {
+    [SYS_sem_init] = sys_sem_init,
+    [SYS_sem_wait] = sys_sem_wait,
+    [SYS_sem_post] = sys_sem_post,
+    [SYS_sem_getvalue] = sys_sem_getvalue,
+    [SYS_sem_getid] = sys_sem_getid,
     [SYS_putchar] = sys_putchar,
     [SYS_print_cons] = sys_print_cons,
     [SYS_getenvid] = sys_getenvid,
