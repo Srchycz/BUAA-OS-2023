@@ -78,3 +78,70 @@ void ide_write(u_int diskno, u_int secno, void *src, u_int nsecs) {
 		panic_on(res == 0);
 	}
 }
+//extra
+int cnt[32];//pno
+int mapSSD[32];//logic_no
+int vis[32];//pno
+void ssd_init() {
+	for (int i = 0; i < 32; ++ i) {
+		cnt[i] = 0;
+		mapSSD[i] = -1;
+		vis[i] = 0;
+	}
+}
+int ssd_read(u_int logic_no, void *dst) {
+	int p_no = mapSSD[logic_no];
+	if (p_no == -1) return -1;
+	ide_read(0, p_no, dst, 1);
+	return 0;	
+}
+void ssd_write(u_int logic_no, void *src) {
+	ssd_erase(logic_no);
+	int num = 0x3f3f3f3f;
+	int id = -1;//get min cnt pno
+	for (int i = 0; i < 32; ++ i) {
+		if (vis[i] == 0 && cnt[i] < num) {
+			num = cnt[i];
+			id = i;
+		}
+	}
+	if (num >= 5) {
+		int num2 = 0x3f3f3f3f;
+		int id2 = -1;
+		for (int i = 0; i < 32; ++ i) {
+			if (vis[i] == 1 && cnt [i] < num2) {
+				num2 = cnt[i];
+				id2 = i;
+			}
+		}
+		int temp[130];
+		ide_read(0, id2, &temp, 1);
+		ide_write(0, id, &temp, 1);
+		vis[id] = 1;
+		int lno = -1;
+		for (int i = 0; i < 32; ++ i) {
+			if (mapSSD[i] == id2) {
+				lno = i;
+				break;
+			}
+		}
+		ssd_erase(lno);
+		id = id2;
+	}
+	ide_write(0, id, src, 1);
+	vis[id] = 1;
+	mapSSD[logic_no] = id;
+}
+void ssd_erase(u_int logic_no) {
+	int pno = mapSSD[logic_no];
+	if (pno == -1) return;
+	int temp[130];
+	for (int i = 0; i < 130; ++i) {
+		temp[i] = 0;
+	}
+	ide_write(0, pno, &temp, 1);
+	mapSSD[logic_no] = -1;
+	++cnt[pno];
+	vis[pno] = 0;
+}
+
