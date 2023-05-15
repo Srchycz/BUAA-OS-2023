@@ -126,6 +126,7 @@ void ssd_write(u_int logic_no, void *src) {
 			}
 		}
 		ssd_erase(lno);
+		mapSSD[lno] = id;//change map
 		id = id2;
 	}
 	ide_write(0, id, src, 1);
