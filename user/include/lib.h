@@ -13,6 +13,10 @@
 #define envs ((volatile struct Env *)UENVS)
 #define pages ((volatile struct Page *)UPAGES)
 
+//exam
+u_int get_time(u_int *us);
+void usleep(u_int us);
+
 // libos
 void exit(void) __attribute__((noreturn));
 
