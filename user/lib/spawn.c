@@ -116,7 +116,10 @@ int spawn(char *prog, char **argv) {
 	int r;
 	u_char elfbuf[512];
 	/* Exercise 6.4: Your code here. (1/6) */
-
+	if (readn(fd, elfbuf, sizeof(Elf32_Ehdr)) != sizeof(Elf32_Ehdr)) {
+		r = -E_NOT_EXEC;
+		goto err;
+	}
 	const Elf32_Ehdr *ehdr = elf_from(elfbuf, sizeof(Elf32_Ehdr));
 	if (!ehdr) {
 		r = -E_NOT_EXEC;
@@ -128,12 +131,18 @@ int spawn(char *prog, char **argv) {
 	// If the syscall fails, set 'r' and 'goto err'.
 	u_int child;
 	/* Exercise 6.4: Your code here. (2/6) */
-
+	child = syscall_exofork();
+	if (child < 0) {
+		r = child;
+		goto err;
+	}
 	// Step 4: Use 'init_stack(child, argv, &sp)' to initialize the stack of the child.
 	// 'goto err1' if that fails.
 	u_int sp;
 	/* Exercise 6.4: Your code here. (3/6) */
-
+	if ((r = init_stack(child, argv, &sp)) < 0) {
+		goto err1;
+	}
 	// Step 5: Load the ELF segments in the file into the child's memory.
 	// This is similar to 'load_icode()' in the kernel.
 	size_t ph_off;
@@ -143,7 +152,10 @@ int spawn(char *prog, char **argv) {
 		// 'goto err1' on failure.
 		// You may want to use 'seek' and 'readn'.
 		/* Exercise 6.4: Your code here. (4/6) */
-
+		if (readn(fd, elfbuf, ehdr->e_phentsize) != ehdr->e_phentsize) {
+			r = 
+			goto err1;
+		}
 		Elf32_Phdr *ph = (Elf32_Phdr *)elfbuf;
 		if (ph->p_type == PT_LOAD) {
 			void *bin;
