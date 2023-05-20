@@ -152,8 +152,9 @@ int spawn(char *prog, char **argv) {
 		// 'goto err1' on failure.
 		// You may want to use 'seek' and 'readn'.
 		/* Exercise 6.4: Your code here. (4/6) */
+		seek(fd, ph_off);
 		if (readn(fd, elfbuf, ehdr->e_phentsize) != ehdr->e_phentsize) {
-			r = 
+			r = -E_NOT_EXEC;
 			goto err1;
 		}
 		Elf32_Phdr *ph = (Elf32_Phdr *)elfbuf;
@@ -163,12 +164,12 @@ int spawn(char *prog, char **argv) {
 			// using 'read_map()'.
 			// 'goto err1' if that fails.
 			/* Exercise 6.4: Your code here. (5/6) */
-
+			read_map(fd, ph->p_offset, &bin);
 			// Load the segment 'ph' into the child's memory using 'elf_load_seg()'.
 			// Use 'spawn_mapper' as the callback, and '&child' as its data.
 			// 'goto err1' if that fails.
 			/* Exercise 6.4: Your code here. (6/6) */
-
+			elf_load_seg(ph, bin, spawn_mapper, &child);
 		}
 	}
 	close(fd);
