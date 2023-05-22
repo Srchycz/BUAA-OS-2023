@@ -353,7 +353,7 @@ int main(int argc, char **argv) {
 			printf("writing regular file '%s' into disk\n", name);
 			write_file(&super.s_root, name);
 		} else if (S_ISLNK(stat_buf.st_mode)) {
-			//printf("writing symlink file '%s' into disk\n", name);
+			printf("writing symlink file '%s' into disk\n", name);
 			write_symlink(&super.s_root, name);
 		} else {
 			fprintf(stderr, "'%s' has illegal file mode %o\n", name, stat_buf.st_mode);

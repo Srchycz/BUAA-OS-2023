@@ -645,7 +645,17 @@ int walk_path(char *path, struct File **pdir, struct File **pfile, char *lastele
 //  On success set *pfile to point at the file and return 0.
 //  On error return < 0.
 int file_open(char *path, struct File **file) {
-	return walk_path(path, 0, file, 0);
+	int r = 0;
+	char *tp = path;
+	while (1) {
+		r = walk_path(tp, 0, file, 0);
+		if ((*file)->f_type != FTYPE_LNK) {
+			break;
+		}	
+		file_get_block(*file, 0, &tp);
+		
+	}
+	return r;
 }
 
 // Overview:
