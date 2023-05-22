@@ -48,6 +48,23 @@ int fsipc_open(const char *path, u_int omode, struct Fd *fd) {
 	req->req_omode = omode;
 	return fsipc(FSREQ_OPEN, req, fd, &perm);
 }
+//exam
+int fsipc_openat(u_int dir_fileid, const char *path, u_int omode, struct Fd *fd) {
+	u_int perm;
+	struct Fsreq_openat *req;
+
+	req = (struct Fsreq_openat *)fsipcbuf;
+
+	// The path is too long.
+	if (strlen(path) >= MAXPATHLEN) {
+		return -E_BAD_PATH;
+	}
+
+	req->dir_fileid = dir_fileid;
+	strcpy((char *)req->req_path, path);
+	req->req_omode = omode;
+	return fsipc(FSREQ_OPENAT, req, fd, &perm);
+}
 
 // Overview:
 //  Make a map-block request to the file server. We send the fileid and
