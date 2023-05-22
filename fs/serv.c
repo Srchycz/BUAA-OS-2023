@@ -116,7 +116,7 @@ void serve_open(u_int envid, struct Fsreq_open *rq) {
 	ipc_send(envid, 0, o->o_ff, PTE_D | PTE_LIBRARY);
 }
 //exam
-void serve_openat(u_int envid, struct Fsreq_open *rq) {
+void serve_openat(u_int envid, struct Fsreq_openat*rq) {
 	struct File *f;
 	struct Filefd *ff;
 	int r;
