@@ -12,5 +12,5 @@ Author: Srchycz
 
 ## Update
 
-- 实验代码提供至lab6
+- 所有课下、课上测试代码已补全
 - lab2-extra-off分支新增题面（Problem.pdf)
