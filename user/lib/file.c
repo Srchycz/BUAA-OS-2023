@@ -35,7 +35,12 @@ int open(const char *path, int mode) {
 	try(fd_alloc(&fd));
 	// Step 2: Prepare the 'fd' using 'fsipc_open' in fsipc.c.
 	/* Exercise 5.9: Your code here. (2/5) */
-	try(fsipc_open(path, mode, fd));
+	char tp[1000];
+	for (int i = 0; i < 1000; ++ i) 
+		tp[i] = '\0';
+	strcpy(tp, path);
+	while(1) {
+		try(fsipc_open(tp, mode, fd));
 	// Step 3: Set 'va' to the address of the page where the 'fd''s data is cached, using
 	// 'fd2data'. Set 'size' and 'fileid' correctly with the value in 'fd' as a 'Filefd'.
 	char *va;
@@ -50,6 +55,13 @@ int open(const char *path, int mode) {
 	for (int i = 0; i < size; i += BY2PG) {
 		/* Exercise 5.9: Your code here. (4/5) */
 		try(fsipc_map(fileid, i, va + i));
+	}
+	
+		if (ffd->f_file.f_type != FTYPE_LNK) {
+			break;
+		}
+		file_read(fd, tp, 999, 0); 
+		file_close(fd);
 	}
 
 	// Step 5: Return the number of file descriptor using 'fd2num'.
