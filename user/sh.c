@@ -99,8 +99,6 @@ int parsecmd(char **argv, int *rightpipe) {
 			}
 			dup(r, 0);
 			close(r);
-			// user_panic("< redirection not implemented");
-
 			break;
 		case '>':
 			if (gettoken(0, &t) != 'w') {
@@ -115,8 +113,6 @@ int parsecmd(char **argv, int *rightpipe) {
 			}
 			dup(r, 1);
 			close(r);
-			// user_panic("> redirection not implemented");
-
 			break;
 		case '|':;
 			/*
@@ -155,10 +151,12 @@ int parsecmd(char **argv, int *rightpipe) {
 				close(p[0]);
 				return argc;
 			}
-
-			user_panic("| not implemented");
-
 			break;
+		case ';': {
+			// user_panic("there is a ';' !");
+			return argc;
+			break;
+		}
 		}
 	}
 
@@ -169,23 +167,26 @@ void runcmd(char *s) {
 	gettoken(s, 0); // set
 
 	char *argv[MAXARGS];
-	int rightpipe = 0;
-	int argc = parsecmd(argv, &rightpipe);
-	if (argc == 0) {
-		return;
-	}
-	argv[argc] = 0;
+	for (;;) { // 无限循环以支持一行多命令
+		int rightpipe = 0;
+		int argc = parsecmd(argv, &rightpipe);
+		if (argc == 0) {
+			exit();
+			return;
+		}
+		argv[argc] = 0;
 
-	int child = spawn(argv[0], argv);
-	close_all();
-	if (child >= 0) {
-		wait(child);
-	}
-	else {
-		debugf("spawn %s: %d\n", argv[0], child);
-	}
-	if (rightpipe) {
-		wait(rightpipe);
+		int child = spawn(argv[0], argv);
+		close_all();
+		if (child >= 0) {
+			wait(child);
+		}
+		else {
+			debugf("spawn %s: %d\n", argv[0], child);
+		}
+		if (rightpipe) {
+			wait(rightpipe);
+		}
 	}
 	exit();
 }
