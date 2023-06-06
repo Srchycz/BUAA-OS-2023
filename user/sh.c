@@ -26,14 +26,14 @@ int _gettoken(char *s, char **p1, char **p2) {
 		return 0;
 	}
 
-	while (strchr(WHITESPACE, *s)) {
+	while (strchr(WHITESPACE, *s)) { // 忽略空白符
 		*s++ = 0;
 	}
 	if (*s == 0) {
 		return 0;
 	}
 
-	if (strchr(SYMBOLS, *s)) {
+	if (strchr(SYMBOLS, *s)) { // 特殊符号 直接返回
 		int t = *s;
 		*p1 = s;
 		*s++ = 0;
@@ -53,10 +53,15 @@ int gettoken(char *s, char **p1) {
 	static int c, nc;
 	static char *np1, *np2;
 
-	if (s) {
+	if (s) { // s != NULL set np1, np2
 		nc = _gettoken(s, &np1, &np2);
 		return 0;
 	}
+	/*
+	s == NULL (0)  默认从读取词元的中断位置继续向后读
+	这里的 c 和 nc 形成了一个微型缓冲区的结构
+	返回值是一个词元，同时将 *p1 指向该 token
+	*/
 	c = nc;
 	*p1 = np1;
 	nc = _gettoken(np2, &np1, &np2);
@@ -75,11 +80,11 @@ int parsecmd(char **argv, int *rightpipe) {
 		case 0:
 			return argc;
 		case 'w':
-			if (argc >= MAXARGS) {
+			if (argc >= MAXARGS) { // 超过最大参数个数 报错
 				debugf("too many arguments\n");
 				exit();
 			}
-			argv[argc++] = t;
+			argv[argc++] = t; // 存下该参数的指针
 			break;
 		case '<':
 			if (gettoken(0, &t) != 'w') {
@@ -131,8 +136,8 @@ int parsecmd(char **argv, int *rightpipe) {
 			 */
 			int p[2];
 			/* Exercise 6.5: Your code here. (3/3) */
-			if((r = pipe(p)) < 0) {
-				user_panic("pipe alloc error %d!\n",r);
+			if ((r = pipe(p)) < 0) {
+				user_panic("pipe alloc error %d!\n", r);
 			}
 			*rightpipe = fork();
 			if (*rightpipe < 0) {
@@ -142,7 +147,7 @@ int parsecmd(char **argv, int *rightpipe) {
 				dup(p[0], 0);
 				close(p[0]);
 				close(p[1]);
-				return parsecmd(argv, rightpipe);
+				return parsecmd(argv, rightpipe); // 父进程要继续解析 以保证得到正确的 argc 和 argv
 			}
 			else {
 				dup(p[1], 1);
@@ -161,7 +166,7 @@ int parsecmd(char **argv, int *rightpipe) {
 }
 
 void runcmd(char *s) {
-	gettoken(s, 0);
+	gettoken(s, 0); // set
 
 	char *argv[MAXARGS];
 	int rightpipe = 0;
@@ -175,7 +180,8 @@ void runcmd(char *s) {
 	close_all();
 	if (child >= 0) {
 		wait(child);
-	} else {
+	}
+	else {
 		debugf("spawn %s: %d\n", argv[0], child);
 	}
 	if (rightpipe) {
@@ -196,7 +202,8 @@ void readline(char *buf, u_int n) {
 		if (buf[i] == '\b' || buf[i] == 0x7f) {
 			if (i > 0) {
 				i -= 2;
-			} else {
+			}
+			else {
 				i = -1;
 			}
 			if (buf[i] != '\b') {
@@ -225,13 +232,13 @@ void usage(void) {
 int main(int argc, char **argv) {
 	int r;
 	int interactive = iscons(0);
-	int echocmds = 0;
+	int echocmds = 0; // 回显命令
 	debugf("\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
 	debugf("::                                                         ::\n");
 	debugf("::                     MOS Shell 2023                      ::\n");
 	debugf("::                                                         ::\n");
 	debugf(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
-	ARGBEGIN {
+	ARGBEGIN{
 	case 'i':
 		interactive = 1;
 		break;
@@ -241,11 +248,11 @@ int main(int argc, char **argv) {
 	default:
 		usage();
 	}
-	ARGEND
+		ARGEND
 
-	if (argc > 1) {
-		usage();
-	}
+		if (argc > 1) {
+			usage();
+		}
 	if (argc == 1) {
 		close(0);
 		if ((r = open(argv[1], O_RDONLY)) < 0) {
@@ -253,13 +260,13 @@ int main(int argc, char **argv) {
 		}
 		user_assert(r == 0);
 	}
-	for (;;) {
+	for (;;) { // 编译出的汇编码可能会比while(1)少
 		if (interactive) {
 			printf("\n$ ");
 		}
 		readline(buf, sizeof buf);
 
-		if (buf[0] == '#') {
+		if (buf[0] == '#') { // 禁止根用户命令
 			continue;
 		}
 		if (echocmds) {
@@ -268,10 +275,11 @@ int main(int argc, char **argv) {
 		if ((r = fork()) < 0) {
 			user_panic("fork: %d", r);
 		}
-		if (r == 0) {
+		if (r == 0) { // 在子进程中执行命令
 			runcmd(buf);
-			exit();
-		} else {
+			exit();  // kill
+		}
+		else {
 			wait(r);
 		}
 	}
