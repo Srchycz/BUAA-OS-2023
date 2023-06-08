@@ -155,7 +155,6 @@ int parsecmd(char **argv, int *rightpipe) {
 		case ';': {
 			// user_panic("there is a ';' !");
 			return argc;
-			break;
 		}
 		}
 	}
@@ -175,18 +174,31 @@ void runcmd(char *s) {
 			return;
 		}
 		argv[argc] = 0;
-
-		int child = spawn(argv[0], argv);
-		close_all();
-		if (child >= 0) {
-			wait(child);
+		// debugf("Tag2\n");
+		int r;
+		if ((r = fork()) < 0) { // fork一个子进程来执行
+			user_panic("fork: %d", r);
+		}
+		if (r == 0) {
+			int child = spawn(argv[0], argv);
+			close_all();
+			if (child >= 0) {
+				wait(child);
+			}
+			else {
+				debugf("spawn %s: %d\n", argv[0], child);
+			}
+			if (rightpipe) {
+				wait(rightpipe);
+			}
+			exit();// kill
 		}
 		else {
-			debugf("spawn %s: %d\n", argv[0], child);
+			wait(r);
 		}
-		if (rightpipe) {
-			wait(rightpipe);
-		}
+		// for (int i = 0; i < argc; ++i)
+		// 	debugf("%s ", argv[i]);
+		// debugf("\n");
 	}
 	exit();
 }

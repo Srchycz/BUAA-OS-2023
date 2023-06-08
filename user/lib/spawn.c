@@ -71,7 +71,7 @@ int init_stack(u_int child, char **argv, u_int *init_sp) {
 	*init_sp = USTACKTOP - UTEMP - BY2PG + (u_int)pargv_ptr;
 
 	if ((r = syscall_mem_map(0, (void *)UTEMP, child, (void *)(USTACKTOP - BY2PG), PTE_D)) <
-	    0) {
+		0) {
 		goto error;
 	}
 	if ((r = syscall_mem_unmap(0, (void *)UTEMP)) < 0) {
@@ -86,7 +86,7 @@ error:
 }
 
 static int spawn_mapper(void *data, u_long va, size_t offset, u_int perm, const void *src,
-			size_t len) {
+	size_t len) {
 	u_int child_id = *(u_int *)data;
 	try(syscall_mem_alloc(child_id, (void *)va, perm));
 	if (src != NULL) {
@@ -146,7 +146,7 @@ int spawn(char *prog, char **argv) {
 	// Step 5: Load the ELF segments in the file into the child's memory.
 	// This is similar to 'load_icode()' in the kernel.
 	size_t ph_off;
-	ELF_FOREACH_PHDR_OFF (ph_off, ehdr) {
+	ELF_FOREACH_PHDR_OFF(ph_off, ehdr) {
 		// Read the program header in the file with offset 'ph_off' and length
 		// 'ehdr->e_phentsize' into 'elfbuf'.
 		// 'goto err1' on failure.
@@ -199,7 +199,7 @@ int spawn(char *prog, char **argv) {
 			}
 		}
 	}
-
+	// debugf("Tag1: just a test\n");
 	if ((r = syscall_set_env_status(child, ENV_RUNNABLE)) < 0) {
 		debugf("spawn: syscall_set_env_status %x: %d\n", child, r);
 		goto err2;
