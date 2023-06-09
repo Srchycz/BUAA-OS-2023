@@ -41,6 +41,17 @@ int _gettoken(char *s, char **p1, char **p2) {
 		return t;
 	}
 
+	if ('"' == *s) { // 支持双引号
+		*p1 = ++s;
+		while (*s != 0 && *s != '"') {
+			s++;
+		}
+		if (*s == 0) user_panic("Expected another '\"' !\n");
+		*s = 0;
+		*p2 = ++s;
+		return 'w';
+	}
+
 	*p1 = s;
 	while (*s && !strchr(WHITESPACE SYMBOLS, *s)) {
 		s++;
