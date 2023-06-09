@@ -169,6 +169,20 @@ int parsecmd(char **argv, int *rightpipe) {
 				return parsecmd(argv, rightpipe);
 			}
 		}
+		case '&': {
+			if (gettoken(0, &t) != '&') {
+				debugf("syntax error: & not followed by &\n");
+				exit();
+			}
+			int r;
+			if ((r = fork()) < 0) { // fork一个子进程来执行
+				user_panic("fork: %d", r);
+			}
+			if (r == 0)
+				return argc;
+			else
+				return parsecmd(argv, rightpipe); // 无阻塞直接运行
+		}
 		}
 	}
 
