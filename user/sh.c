@@ -68,6 +68,10 @@ int gettoken(char *s, char **p1) {
 	return c;
 }
 
+// int tokenpeek() {
+// 	return 
+// }
+
 #define MAXARGS 128
 
 int parsecmd(char **argv, int *rightpipe) {
@@ -143,7 +147,7 @@ int parsecmd(char **argv, int *rightpipe) {
 				dup(p[0], 0);
 				close(p[0]);
 				close(p[1]);
-				return parsecmd(argv, rightpipe); // 父进程要继续解析 以保证得到正确的 argc 和 argv
+				return parsecmd(argv, rightpipe); // 父进程要继续解析 返回 | 右侧的解析结果
 			}
 			else {
 				dup(p[1], 1);
@@ -153,8 +157,17 @@ int parsecmd(char **argv, int *rightpipe) {
 			}
 			break;
 		case ';': {
-			// user_panic("there is a ';' !");
-			return argc;
+			int r;
+			if ((r = fork()) < 0) { // fork一个子进程来执行
+				user_panic("fork: %d", r);
+			}
+			if (r == 0) {
+				return argc;
+			}
+			else {
+				wait(r);
+				return parsecmd(argv, rightpipe);
+			}
 		}
 		}
 	}
@@ -166,41 +179,29 @@ void runcmd(char *s) {
 	gettoken(s, 0); // set
 
 	char *argv[MAXARGS];
-	for (;;) { // 无限循环以支持一行多命令
-		int rightpipe = 0;
-		int argc = parsecmd(argv, &rightpipe);
-		if (argc == 0) {
-			exit();
-			return;
-		}
-		argv[argc] = 0;
-		// debugf("Tag2\n");
-		int r;
-		if ((r = fork()) < 0) { // fork一个子进程来执行
-			user_panic("fork: %d", r);
-		}
-		if (r == 0) {
-			int child = spawn(argv[0], argv);
-			close_all();
-			if (child >= 0) {
-				wait(child);
-			}
-			else {
-				debugf("spawn %s: %d\n", argv[0], child);
-			}
-			if (rightpipe) {
-				wait(rightpipe);
-			}
-			exit();// kill
-		}
-		else {
-			wait(r);
-		}
-		// for (int i = 0; i < argc; ++i)
-		// 	debugf("%s ", argv[i]);
-		// debugf("\n");
+	int rightpipe = 0;
+	int argc = parsecmd(argv, &rightpipe);
+	if (argc == 0) {
+		exit();
+		return;
 	}
-	exit();
+	argv[argc] = 0;
+	// debugf("Tag2\n");
+	int child = spawn(argv[0], argv);
+	close_all();
+	if (child >= 0) {
+		wait(child);
+	}
+	else {
+		debugf("spawn %s: %d\n", argv[0], child);
+	}
+	if (rightpipe) {
+		wait(rightpipe);
+	}
+	exit();// kill
+	// for (int i = 0; i < argc; ++i)
+	// 	debugf("%s ", argv[i]);
+	// debugf("\n");
 }
 
 void readline(char *buf, u_int n) {
