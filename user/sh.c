@@ -282,6 +282,14 @@ void readline(char *buf, u_int n) {
 				tlast->valid = 0; // free
 				TAILQ_REMOVE(&frontbuf, tlast, buf_link);
 				printf("\x1b[1D\x1b[K");
+				struct Buf *cur;
+				int dis = 0;
+				TAILQ_FOREACH(cur, &backbuf, buf_link) {
+					printf("%c", cur->data);
+					++dis;
+				}
+				while (dis--)
+					printf("\b"); // 复原光标位置
 			}
 			break;
 		case '\r':
@@ -314,20 +322,26 @@ void readline(char *buf, u_int n) {
 				exit();
 			}
 			switch (temp[1]) {
-			case 'C': // forward
+			case 'D': // forward
 				if (!TAILQ_EMPTY(&frontbuf)) {
 					struct Buf *tlast = TAILQ_LAST(&frontbuf, Buf_list);
-					TAILQ_INSERT_HEAD(&backbuf, tlast, buf_link);
 					TAILQ_REMOVE(&frontbuf, tlast, buf_link);
-					printf("\b"); // 左移
+					TAILQ_INSERT_HEAD(&backbuf, tlast, buf_link);
+					// printf("\b"); // 左移
+				}
+				else {
+					printf("\x1b[1C"); // 抵消
 				}
 				break;
-			case 'D': // backward
+			case 'C': // backward
 				if (!TAILQ_EMPTY(&backbuf)) {
 					struct Buf *tfirst = TAILQ_FIRST(&backbuf);
-					TAILQ_INSERT_TAIL(&frontbuf, tfirst, buf_link);
 					TAILQ_REMOVE(&backbuf, tfirst, buf_link);
+					TAILQ_INSERT_TAIL(&frontbuf, tfirst, buf_link);
 					// printf("\x1b[1C"); // 右移
+				}
+				else {
+					printf("\b");// 抵消
 				}
 				break;
 			}
@@ -337,10 +351,15 @@ void readline(char *buf, u_int n) {
 			struct Buf *tempnode = allocBuf(node, BufLen);
 			tempnode->data = tempc;
 			TAILQ_INSERT_TAIL(&frontbuf, tempnode, buf_link);
-			// printf("\x1b[K");
+			printf("\x1b[K"); // 清空光标后内容
 			struct Buf *cur;
-			TAILQ_FOREACH(cur, &backbuf, buf_link)
-				printf("@%c", cur->data);
+			int dis = 0;
+			TAILQ_FOREACH(cur, &backbuf, buf_link) {
+				printf("%c", cur->data);
+				++dis;
+			}
+			while (dis--)
+				printf("\b"); // 复原光标位置
 		}
 		}
 	}
