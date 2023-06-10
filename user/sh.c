@@ -229,29 +229,119 @@ void runcmd(char *s) {
 	// debugf("\n");
 }
 
+#define BufLen 1024
+struct Buf {
+	char data;
+	TAILQ_ENTRY(Buf) buf_link;
+	int valid;
+};
+TAILQ_HEAD(Buf_list, Buf);
+void initBuf(struct Buf *list, int n) {
+	for (int i = 0;i < n;++i) {
+		list[i].valid = 0;
+		list[i].buf_link.tqe_next = NULL;
+		list[i].buf_link.tqe_prev = NULL;
+	}
+}
+struct Buf *allocBuf(struct Buf *list, int n) {
+	for (int i = 0;i < n;++i) {
+		if (list[i].valid == 0) {
+			list[i].buf_link.tqe_next = NULL;
+			list[i].buf_link.tqe_prev = NULL;
+			list[i].valid = 1;
+			return &list[i];
+		}
+	}
+	user_panic("No spare buf left!");
+	exit();
+}
 void readline(char *buf, u_int n) {
+	// struct Buf *cursor = 0; // 当前 cursor 位置
+	// int maxpos = 0; // 本行指令最大位置
+	struct Buf node[BufLen];
+	initBuf(node, BufLen);
+	struct Buf_list frontbuf; // 光标位置前缓冲区
+	struct Buf_list backbuf; // 光标位置后缓冲区
+	TAILQ_INIT(&backbuf);
+	TAILQ_INIT(&frontbuf);
+	int backtot = 0;
 	int r;
-	for (int i = 0; i < n; i++) {
-		if ((r = read(0, buf + i, 1)) != 1) {
+	for (;;) {
+		char tempc;
+		if ((r = read(0, &tempc, 1)) != 1) {
 			if (r < 0) {
 				debugf("read error: %d\n", r);
 			}
 			exit();
 		}
-		if (buf[i] == '\b' || buf[i] == 0x7f) {
-			if (i > 0) {
-				i -= 2;
+		switch (tempc) {
+		case 0x7f:
+		case '\b':
+			if (!TAILQ_EMPTY(&frontbuf)) {
+				struct Buf *tlast = TAILQ_LAST(&frontbuf, Buf_list);
+				tlast->valid = 0; // free
+				TAILQ_REMOVE(&frontbuf, tlast, buf_link);
+				printf("\x1b[1D\x1b[K");
 			}
-			else {
-				i = -1;
-			}
-			if (buf[i] != '\b') {
-				printf("\b");
-			}
-		}
-		if (buf[i] == '\r' || buf[i] == '\n') {
+			break;
+		case '\r':
+		case '\n': {
+			struct Buf *cur;
+			int i = 0;
+			TAILQ_FOREACH(cur, &frontbuf, buf_link)
+				buf[i++] = cur->data;
+			TAILQ_FOREACH(cur, &backbuf, buf_link)
+				buf[i++] = cur->data;
 			buf[i] = 0;
 			return;
+		}
+		case 0x1B: { // 'ESC'
+			char temp[4];
+			if ((r = read(0, temp, 1)) != 1) {
+				if (r < 0) {
+					debugf("read error: %d\n", r);
+				}
+				exit();
+			}
+			if (temp[0] != '[') {
+				debugf("cannot recognize\n");
+				exit();
+			}
+			if ((r = read(0, temp + 1, 1)) != 1) {
+				if (r < 0) {
+					debugf("read error: %d\n", r);
+				}
+				exit();
+			}
+			switch (temp[1]) {
+			case 'C': // forward
+				if (!TAILQ_EMPTY(&frontbuf)) {
+					struct Buf *tlast = TAILQ_LAST(&frontbuf, Buf_list);
+					TAILQ_INSERT_HEAD(&backbuf, tlast, buf_link);
+					TAILQ_REMOVE(&frontbuf, tlast, buf_link);
+					printf("\b"); // 左移
+				}
+				break;
+			case 'D': // backward
+				if (!TAILQ_EMPTY(&backbuf)) {
+					struct Buf *tfirst = TAILQ_FIRST(&backbuf);
+					TAILQ_INSERT_TAIL(&frontbuf, tfirst, buf_link);
+					TAILQ_REMOVE(&backbuf, tfirst, buf_link);
+					// printf("\x1b[1C"); // 右移
+				}
+				break;
+			}
+			break;
+		}
+		default: {
+			struct Buf *tempnode = allocBuf(node, BufLen);
+			tempnode->data = tempc;
+			TAILQ_INSERT_TAIL(&frontbuf, tempnode, buf_link);
+			// printf("\x1b[K");
+			struct Buf *cur;
+			TAILQ_FOREACH(cur, &backbuf, buf_link)
+				printf("@%c", cur->data);
+		}
 		}
 	}
 	debugf("line too long\n");
