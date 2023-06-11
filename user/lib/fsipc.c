@@ -115,7 +115,7 @@ int fsipc_remove(const char *path) {
 	// Step 1: Check the length of 'path' using 'strlen'.
 	// If the length of path is 0 or larger than 'MAXPATHLEN', return -E_BAD_PATH.
 	/* Exercise 5.12: Your code here. (1/3) */
-	if (!(*path) || strlen(path) > MAXPATHLEN) 
+	if (!(*path) || strlen(path) > MAXPATHLEN)
 		return -E_BAD_PATH;
 	// Step 2: Use 'fsipcbuf' as a 'struct Fsreq_remove'.
 	struct Fsreq_remove *req = (struct Fsreq_remove *)fsipcbuf;
@@ -133,4 +133,16 @@ int fsipc_remove(const char *path) {
 //  blocks in the buffer cache.
 int fsipc_sync(void) {
 	return fsipc(FSREQ_SYNC, fsipcbuf, 0, 0);
+}
+
+// Overview:
+// Create a file or directory
+// If the path already exists, only the timestamp is updated
+int fsipc_create(const char *path, u_int type) {
+	if (!(*path) || strlen(path) > MAXPATHLEN)
+		return -E_BAD_PATH;
+	struct Fsreq_create *req = (struct Fsreq_create *)fsipcbuf;
+	strcpy(req->req_path, path);
+	req->req_type = type;
+	return fsipc(FSREQ_CREATE, req, 0, 0);
 }

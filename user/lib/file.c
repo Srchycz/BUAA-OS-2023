@@ -11,12 +11,12 @@ static int file_stat(struct Fd *fd, struct Stat *stat);
 // Dot represents choosing the member within the struct declaration
 // to initialize, with no need to consider the order of members.
 struct Dev devfile = {
-    .dev_id = 'f',
-    .dev_name = "file",
-    .dev_read = file_read,
-    .dev_write = file_write,
-    .dev_close = file_close,
-    .dev_stat = file_stat,
+	.dev_id = 'f',
+	.dev_name = "file",
+	.dev_read = file_read,
+	.dev_write = file_write,
+	.dev_close = file_close,
+	.dev_stat = file_stat,
 };
 
 // Overview:
@@ -253,4 +253,10 @@ int remove(const char *path) {
 //  Synchronize disk with buffer cache
 int sync(void) {
 	return fsipc_sync();
+}
+
+// Overview:
+//	Create a file or directory;
+int create(const char *path, u_int type) {
+	return fsipc_create(path, type);
 }

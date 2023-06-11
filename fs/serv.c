@@ -21,7 +21,7 @@ struct Open {
 #define FILEVA 0x60000000
 
 // initialize to force into data section
-struct Open opentab[MAXOPEN] = {{0, 0, 1}};
+struct Open opentab[MAXOPEN] = { {0, 0, 1} };
 
 // Virtual address at which to receive page mappings containing client requests.
 #define REQVA 0x0ffff000
@@ -98,6 +98,15 @@ void serve_open(u_int envid, struct Fsreq_open *rq) {
 
 	// Open the file.
 	if ((r = file_open(rq->req_path, &f)) < 0) {
+		if (rq->req_omode & O_CREAT == O_CREAT) { // 不存在即创建
+			r = file_create(rq->req_path, &f);
+			if (rq->req_omode & O_MKDIR == O_MKDIR)
+				f->f_type = FTYPE_DIR;
+			else
+				f->f_type = FTYPE_REG;
+		}
+	}
+	if (r < 0) {
 		ipc_send(envid, r, 0, 0);
 		return;
 	}
@@ -201,6 +210,26 @@ void serve_sync(u_int envid) {
 	ipc_send(envid, 0, 0, 0);
 }
 
+void serve_create(u_int envid, struct Fsreq_create *req) {
+	struct File *f;
+	int r;
+
+	// Open the file.
+	if ((r = file_open(req->req_path, &f)) < 0) { // 不存在即创建
+		r = file_create(req->req_path, &f);
+		if (req->req_type == FTYPE_DIR)
+			f->f_type = FTYPE_DIR;
+		else
+			f->f_type = FTYPE_REG;
+	}
+	if (r < 0) {
+		ipc_send(envid, r, 0, 0);
+		return;
+	}
+
+	ipc_send(envid, 0, 0, 0);
+}
+
 void serve(void) {
 	u_int req, whom, perm;
 
@@ -242,6 +271,10 @@ void serve(void) {
 
 		case FSREQ_SYNC:
 			serve_sync(whom);
+			break;
+
+		case FSREQ_CREATE:
+			serve_create(whom, (struct Fsreq_create *)REQVA);
 			break;
 
 		default:

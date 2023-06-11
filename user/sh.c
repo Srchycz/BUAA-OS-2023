@@ -108,7 +108,7 @@ int parsecmd(char **argv, int *rightpipe) {
 			}
 			// Open 't' for reading, dup it onto fd 0, and then close the original fd.
 			/* Exercise 6.5: Your code here. (1/3) */
-			r = open(t, O_RDONLY);
+			r = open(t, O_RDONLY | O_CREAT); // 不存在时创建
 			if (r < 0) {
 				user_panic("The redirection path is not valid!\n");
 			}
@@ -122,7 +122,7 @@ int parsecmd(char **argv, int *rightpipe) {
 			}
 			// Open 't' for writing, dup it onto fd 1, and then close the original fd.
 			/* Exercise 6.5: Your code here. (2/3) */
-			r = open(t, O_WRONLY);
+			r = open(t, O_WRONLY | O_CREAT); // 不存在时创建
 			if (r < 0) {
 				user_panic("The redirection path is not valid!\n");
 			}
@@ -158,7 +158,7 @@ int parsecmd(char **argv, int *rightpipe) {
 				dup(p[0], 0);
 				close(p[0]);
 				close(p[1]);
-				return parsecmd(argv, rightpipe); // 父进程要继续解析 返回 | 右侧的解析结果
+				return parsecmd(argv, rightpipe); // 子进程要继续解析 返回 | 右侧的解析结果
 			}
 			else {
 				dup(p[1], 1);

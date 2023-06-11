@@ -14,7 +14,7 @@
  * server's address space at DISKMAP+(n*BY2BLK). */
 #define DISKMAP 0x10000000
 
-/* Maximum disk size we can handle (1GB) */
+ /* Maximum disk size we can handle (1GB) */
 #define DISKMAX 0x40000000
 
 /* ide.c */
@@ -23,6 +23,7 @@ void ide_write(u_int diskno, u_int secno, void *src, u_int nsecs);
 
 /* fs.c */
 int file_open(char *path, struct File **pfile);
+int file_create(char *path, struct File **pflie);
 int file_get_block(struct File *f, u_int blockno, void **pblk);
 int file_set_size(struct File *f, u_int newsize);
 void file_close(struct File *f);
