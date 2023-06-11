@@ -14,7 +14,8 @@ void ls(char *path, char *prefix) {
 	}
 	if (st.st_isdir && !flag['d']) {
 		lsdir(path, prefix);
-	} else {
+	}
+	else {
 		ls1(0, st.st_isdir, st.st_size, path);
 	}
 }
@@ -48,7 +49,8 @@ void ls1(char *prefix, u_int isdir, u_int size, char *name) {
 	if (prefix) {
 		if (prefix[0] && prefix[strlen(prefix) - 1] != '/') {
 			sep = "/";
-		} else {
+		}
+		else {
 			sep = "";
 		}
 		printf("%s%s", prefix, sep);
@@ -68,7 +70,7 @@ void usage(void) {
 int main(int argc, char **argv) {
 	int i;
 
-	ARGBEGIN {
+	ARGBEGIN{
 	default:
 		usage();
 	case 'd':
@@ -77,15 +79,16 @@ int main(int argc, char **argv) {
 		flag[(u_char)ARGC()]++;
 		break;
 	}
-	ARGEND
+		ARGEND
 
-	if (argc == 0) {
-		ls("/", "");
-	} else {
-		for (i = 0; i < argc; i++) {
-			ls(argv[i], argv[i]);
+		if (argc == 0) {
+			ls("/", "");
 		}
-	}
+		else {
+			for (i = 0; i < argc; i++) {
+				ls(argv[i], argv[i]);
+			}
+		}
 	printf("\n");
 	return 0;
 }

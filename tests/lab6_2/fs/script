@@ -1,2 +1,5 @@
 echo.b This is the end of the script
 ls.b | cat.b > aaa.txt
+mkdir dir1; mkdir dir1/dir2
+touch dir1/reg1
+touch dir1/dir2/reg2
