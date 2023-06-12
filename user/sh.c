@@ -255,6 +255,12 @@ struct Buf *allocBuf(struct Buf *list, int n) {
 	user_panic("No spare buf left!");
 	exit();
 }
+void freeBuflist(struct Buf_list *list) {
+	struct Buf *cur;
+	TAILQ_FOREACH(cur, list, buf_link)
+		cur->valid = 0;
+	TAILQ_INIT(list);
+}
 void readline(char *buf, u_int n) {
 	// struct Buf *cursor = 0; // 当前 cursor 位置
 	// int maxpos = 0; // 本行指令最大位置
@@ -264,7 +270,6 @@ void readline(char *buf, u_int n) {
 	struct Buf_list backbuf; // 光标位置后缓冲区
 	TAILQ_INIT(&backbuf);
 	TAILQ_INIT(&frontbuf);
-	int backtot = 0;
 	int r;
 	for (;;) {
 		char tempc;
@@ -322,6 +327,43 @@ void readline(char *buf, u_int n) {
 				exit();
 			}
 			switch (temp[1]) {
+			case 'A': { // history prev
+				printf("\x1b[B"); // 抵消
+				char dst[1024];
+				getPrev(dst);
+				if (strlen(dst) == 0) break;
+				struct Buf *cur;
+				TAILQ_FOREACH(cur, &frontbuf, buf_link)
+					printf("\x1b[1D");
+				printf("\x1b[K");
+				freeBuflist(&frontbuf);
+				freeBuflist(&backbuf);
+				for (int i = 0; dst[i] != '\0';++i) {
+					struct Buf *tempnode = allocBuf(node, BufLen);
+					tempnode->data = dst[i];
+					TAILQ_INSERT_TAIL(&frontbuf, tempnode, buf_link);
+				}
+				printf("%s", dst);
+				break;
+			}
+			case 'B': { // history next
+				char dst[1024];
+				getNxt(dst);
+				if (strlen(dst) == 0) break;
+				struct Buf *cur;
+				TAILQ_FOREACH(cur, &frontbuf, buf_link)
+					printf("\x1b[1D");
+				printf("\x1b[K");
+				freeBuflist(&frontbuf);
+				freeBuflist(&backbuf);
+				for (int i = 0; dst[i] != '\0';++i) {
+					struct Buf *tempnode = allocBuf(node, BufLen);
+					tempnode->data = dst[i];
+					TAILQ_INSERT_TAIL(&frontbuf, tempnode, buf_link);
+				}
+				printf("%s", dst);
+				break;
+			}
 			case 'D': // forward
 				if (!TAILQ_EMPTY(&frontbuf)) {
 					struct Buf *tlast = TAILQ_LAST(&frontbuf, Buf_list);
