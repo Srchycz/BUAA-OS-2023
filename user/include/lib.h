@@ -121,6 +121,15 @@ int ftruncate(int fd, u_int size);
 int sync(void);
 int create(const char *path, u_int type);
 
+// history.c
+void history_init(void);
+void savecmd(char *buf);
+void getPrev(char *dst);
+void getNxt(char *dst);
+
+#define H_FORWARD 0
+#define H_BACKWARD 1
+
 #define user_assert(x)                                                                             \
 	do {                                                                                       \
 		if (!(x))                                                                          \
@@ -134,6 +143,7 @@ int create(const char *path, u_int type);
 #define O_ACCMODE 0x0003 /* mask for above modes */
 #define O_CREAT 0x0100 /* create if nonexistent */
 #define O_MKDIR 0x0800 /* create directory, not regular file */
+#define O_APPEND 0x0010 /* open at the end of the file */
 
 // Unimplemented open modes
 #define O_TRUNC 0x0200 /* truncate to zero length */

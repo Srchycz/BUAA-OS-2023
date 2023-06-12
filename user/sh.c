@@ -408,11 +408,13 @@ int main(int argc, char **argv) {
 		}
 		user_assert(r == 0);
 	}
+	history_init();
 	for (;;) { // 编译出的汇编码可能会比while(1)少
 		if (interactive) {
 			printf("\n$ ");
 		}
 		readline(buf, sizeof buf);
+		savecmd(buf);
 
 		if (buf[0] == '#') { // 禁止根用户命令
 			continue;
