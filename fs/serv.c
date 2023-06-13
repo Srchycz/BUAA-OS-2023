@@ -98,9 +98,9 @@ void serve_open(u_int envid, struct Fsreq_open *rq) {
 
 	// Open the file.
 	if ((r = file_open(rq->req_path, &f)) < 0) {
-		if (rq->req_omode & O_CREAT == O_CREAT) { // 不存在即创建
+		if ((rq->req_omode & O_CREAT) == O_CREAT) { // 不存在即创建
 			r = file_create(rq->req_path, &f);
-			if (rq->req_omode & O_MKDIR == O_MKDIR)
+			if ((rq->req_omode & O_MKDIR) == O_MKDIR)
 				f->f_type = FTYPE_DIR;
 			else
 				f->f_type = FTYPE_REG;
@@ -120,8 +120,9 @@ void serve_open(u_int envid, struct Fsreq_open *rq) {
 	ff->f_fileid = o->o_fileid;
 	o->o_mode = rq->req_omode;
 	ff->f_fd.fd_omode = o->o_mode;
-	if (rq->req_omode & O_APPEND == O_APPEND)
+	if ((rq->req_omode & O_APPEND) == O_APPEND) {
 		ff->f_fd.fd_offset = ff->f_file.f_size;
+	}
 	ff->f_fd.fd_dev_id = devfile.dev_id;
 
 	ipc_send(envid, 0, o->o_ff, PTE_D | PTE_LIBRARY);

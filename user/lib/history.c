@@ -16,7 +16,7 @@ void history_init(void) {
 // append buf of cmd to .history
 // if strlen(buf) == 0, it will be ignored
 void savecmd(char *buf) {
-    int r = open("/.history", O_WRONLY);
+    int r = open("/.history", O_WRONLY | O_APPEND);
     if (r < 0) {
         user_panic("history open fail: %d\n", r);
     }

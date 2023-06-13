@@ -106,7 +106,7 @@ int spawn(char *prog, char **argv) {
 	// Return the error if 'open' fails.
 	int fd;
 	fd = open(prog, O_RDONLY);
-	if (fd < 0) {// 尝试追加 .b 打开
+	if (fd < 0) {// open失败 尝试追加 .b 打开
 		char newprog[1024];
 		int idx;
 		for (idx = 0; prog[idx] != '\0'; ++idx)

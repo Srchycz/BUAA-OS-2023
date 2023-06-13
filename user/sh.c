@@ -181,10 +181,6 @@ int parsecmd(char **argv, int *rightpipe) {
 			}
 		}
 		case '&': {
-			if (gettoken(0, &t) != '&') {
-				debugf("syntax error: & not followed by &\n");
-				exit();
-			}
 			int r;
 			if ((r = fork()) < 0) { // fork一个子进程来执行
 				user_panic("fork: %d", r);
@@ -211,7 +207,15 @@ void runcmd(char *s) {
 		return;
 	}
 	argv[argc] = 0;
-	// debugf("Tag2\n");
+	int u;
+	// if (strcmp(argv[0], "cd") == 0) {
+	// 	/*切换目录*/
+	// 	return;
+	// }
+	// else {
+	// 	u = fork();
+	// }
+	// if (u == 0) {
 	int child = spawn(argv[0], argv);
 	close_all();
 	if (child >= 0) {
@@ -227,6 +231,7 @@ void runcmd(char *s) {
 	// for (int i = 0; i < argc; ++i)
 	// 	debugf("%s ", argv[i]);
 	// debugf("\n");
+// }
 }
 
 #define BufLen 1024
