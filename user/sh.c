@@ -292,14 +292,18 @@ void readline(char *buf, u_int n) {
 				tlast->valid = 0; // free
 				TAILQ_REMOVE(&frontbuf, tlast, buf_link);
 				printf("\x1b[1D\x1b[K");
-				struct Buf *cur;
-				int dis = 0;
-				TAILQ_FOREACH(cur, &backbuf, buf_link) {
-					printf("%c", cur->data);
-					++dis;
+				if (!TAILQ_EMPTY(&backbuf)) {
+					struct Buf *cur;
+					// int dis = 0;
+					printf("\x1b[s");
+					TAILQ_FOREACH(cur, &backbuf, buf_link) {
+						printf("%c", cur->data);
+						// ++dis;
+					}
+					printf("\x1b[u");
+					// while (dis--)
+					// 	printf("\b"); // 复原光标位置
 				}
-				while (dis--)
-					printf("\b"); // 复原光标位置
 			}
 			break;
 		case '\r':
@@ -398,15 +402,19 @@ void readline(char *buf, u_int n) {
 			struct Buf *tempnode = allocBuf(node, BufLen);
 			tempnode->data = tempc;
 			TAILQ_INSERT_TAIL(&frontbuf, tempnode, buf_link);
-			printf("\x1b[K"); // 清空光标后内容
-			struct Buf *cur;
-			int dis = 0;
-			TAILQ_FOREACH(cur, &backbuf, buf_link) {
-				printf("%c", cur->data);
-				++dis;
+			if (!TAILQ_EMPTY(&backbuf)) {
+				printf("\x1b[K"); // 清空光标后内容
+				printf("\x1b[s"); // 保存光标位置
+				struct Buf *cur;
+				// int dis = 0;
+				TAILQ_FOREACH(cur, &backbuf, buf_link) {
+					printf("%c", cur->data);
+					// ++dis;
+				}
+				printf("\x1b[u"); // 复原光标位置
+				// while (dis--)
+				// 	printf("\b"); // 复原光标位置
 			}
-			while (dis--)
-				printf("\b"); // 复原光标位置
 		}
 		}
 	}
