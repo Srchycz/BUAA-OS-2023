@@ -1,12 +1,35 @@
 #include <lib.h>
 
 // Overview:
+// change workdir to path
+void chdir(int envid, char *path) {
+    char now[1024];
+    syscall_getworkdir(now);
+    mergepath(now, path);
+    struct Stat st;
+    int r;
+    if ((r = stat(path, &st)) < 0) {
+        debugf("chdir error:%d\n", r);
+        return;
+    }
+    if (!st.st_isdir) {
+        debugf("%s is not a directory!\n", now);
+        return;
+    }
+    syscall_chworkdir(envid, now);
+}
+
+// Overview:
 // Merge the suffix on the path 
 void mergepath(char *path, char *suffix) {
+    if (suffix[0] == '/') {
+        path[0] = '/';
+        path[1] = '\0';
+    }
     if (suffix[0] == '.' && suffix[1] == '/') // 略去当前目录的表述
         suffix += 2;
     int len = strlen(path);
-    if (path[len] != '/') path[len++] = '/';
+    if (path[len - 1] != '/') path[len++] = '/';
     int i = 0;
     for (;suffix[i] != '\0'; ++i) {
         if (suffix[i] == '.') {

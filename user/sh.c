@@ -4,6 +4,8 @@
 #define WHITESPACE " \t\r\n"
 #define SYMBOLS "<|>&;()"
 
+int mainenvid;
+
 /* Overview:
  *   Parse the next token from the string at s.
  *
@@ -208,14 +210,10 @@ void runcmd(char *s) {
 	}
 	argv[argc] = 0;
 	int u;
-	// if (strcmp(argv[0], "cd") == 0) {
-	// 	/*切换目录*/
-	// 	return;
-	// }
-	// else {
-	// 	u = fork();
-	// }
-	// if (u == 0) {
+	if (strcmp(argv[0], "cd") == 0) {
+		chdir(mainenvid, argv[1]);
+		return;
+	}
 	int child = spawn(argv[0], argv);
 	close_all();
 	if (child >= 0) {
@@ -231,7 +229,6 @@ void runcmd(char *s) {
 	// for (int i = 0; i < argc; ++i)
 	// 	debugf("%s ", argv[i]);
 	// debugf("\n");
-// }
 }
 
 #define BufLen 1024
@@ -291,7 +288,7 @@ void readline(char *buf, u_int n) {
 				struct Buf *tlast = TAILQ_LAST(&frontbuf, Buf_list);
 				tlast->valid = 0; // free
 				TAILQ_REMOVE(&frontbuf, tlast, buf_link);
-				printf("\x1b[1D\x1b[K");
+				printf("\b\x1b[K");
 				if (!TAILQ_EMPTY(&backbuf)) {
 					struct Buf *cur;
 					// int dis = 0;
@@ -361,7 +358,7 @@ void readline(char *buf, u_int n) {
 				if (strlen(dst) == 0) break;
 				struct Buf *cur;
 				TAILQ_FOREACH(cur, &frontbuf, buf_link)
-					printf("\x1b[1D");
+					printf("\b");
 				printf("\x1b[K");
 				freeBuflist(&frontbuf);
 				freeBuflist(&backbuf);
@@ -464,6 +461,7 @@ int main(int argc, char **argv) {
 		user_assert(r == 0);
 	}
 	history_init();
+	mainenvid = syscall_getenvid();
 	for (;;) { // 编译出的汇编码可能会比while(1)少
 		if (interactive) {
 			printf("\n$ ");

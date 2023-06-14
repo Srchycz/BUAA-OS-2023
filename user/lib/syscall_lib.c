@@ -82,7 +82,7 @@ int syscall_getworkdir(char *dst) {
 // Overview:
 // change the curenv's workdirectory
 // Pre-condition:
-// ensure the path is legal and has no character '.'
-int syscall_chworkdir(char *path) {
-	return msyscall(SYS_chworkdir, path);
+// ensure the path is legal and simplest
+int syscall_chworkdir(int envid, char *path) {
+	return msyscall(SYS_chworkdir, envid, path);
 }

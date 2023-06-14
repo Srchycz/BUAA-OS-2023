@@ -486,12 +486,14 @@ int sys_getworkdir(char *dst) {
 	return 0;
 }
 
-int sys_chworkdir(char *path) {
+int sys_chworkdir(int envid, char *path) {
+	struct Env *e;
+	envid2env(envid, &e, 0);
 	int i = 0;
 	if (path[i] != '/') {
-		i = strlen(curenv->env_workdir);
-		strcpy(curenv->env_workdir + i, path);
+		i = strlen(e->env_workdir);
 	}
+	strcpy(e->env_workdir + i, path);
 	return 0;
 }
 
