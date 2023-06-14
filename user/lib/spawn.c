@@ -105,15 +105,19 @@ int spawn(char *prog, char **argv) {
 	// Step 1: Open the file 'prog' (the path of the program).
 	// Return the error if 'open' fails.
 	int fd;
-	fd = open(prog, O_RDONLY);
+	char newprog[1024];
+	int idx = 0;
+	newprog[idx++] = '/';
+	// for (; prog[idx] != '\0'; ++idx)
+	// 	newprog[idx] = prog[idx];
+	newprog[idx] = '\0';
+	mergepath(newprog, prog);
+	fd = open(newprog, O_RDONLY);
 	if (fd < 0) {// open失败 尝试追加 .b 打开
-		char newprog[1024];
-		int idx;
-		for (idx = 0; prog[idx] != '\0'; ++idx)
-			newprog[idx] = prog[idx];
+		idx = strlen(newprog);
 		newprog[idx++] = '.';
 		newprog[idx++] = 'b';
-		newprog[idx++] = '\0';
+		newprog[idx] = '\0';
 		fd = open(newprog, O_RDONLY);
 	}
 	if (fd < 0) {

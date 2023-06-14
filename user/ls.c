@@ -9,6 +9,8 @@ void ls(char *path, char *prefix) {
 	int r;
 	struct Stat st;
 
+	if (strcmp(prefix, "./") || strcmp(prefix, "."))
+		prefix = "";
 	if ((r = stat(path, &st)) < 0) {
 		user_panic("stat %s: %d", path, r);
 	}
@@ -82,7 +84,7 @@ int main(int argc, char **argv) {
 		ARGEND
 
 		if (argc == 0) {
-			ls("/", "");
+			ls("./", "");
 		}
 		else {
 			for (i = 0; i < argc; i++) {

@@ -22,12 +22,17 @@ void chdir(int envid, char *path) {
 // Overview:
 // Merge the suffix on the path 
 void mergepath(char *path, char *suffix) {
+    // debugf("path:%s suffix:%s\n", path, suffix);
     if (suffix[0] == '/') {
         path[0] = '/';
         path[1] = '\0';
     }
-    if (suffix[0] == '.' && suffix[1] == '/') // 略去当前目录的表述
-        suffix += 2;
+    if (suffix[0] == '.') { // 略去当前目录的表述
+        if (suffix[1] == '\0')
+            return;
+        if (suffix[1] == '/')
+            suffix += 2;
+    }
     int len = strlen(path);
     if (path[len - 1] != '/') path[len++] = '/';
     int i = 0;

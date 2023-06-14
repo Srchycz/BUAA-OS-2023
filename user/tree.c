@@ -1,5 +1,6 @@
 #include <lib.h>
 
+int nfile = 0, ndir = 0;
 int flag[256];
 
 void _tree(char *, int);
@@ -14,7 +15,9 @@ void tree(char *path) {
     if (!st.st_isdir) {
         user_panic("The path is not a directory!\n");
     }
+    nfile = 0, ndir = 0;
     _tree(path, 0);
+    printf("\n%d directories, %d files\n", ndir, nfile);
 }
 
 void _tree(char *path, int dep) {
@@ -32,17 +35,19 @@ void _tree(char *path, int dep) {
                 printf("| ");
             printf("|--%s\n", f.f_name);
             if (f.f_type == FTYPE_DIR) {
+                ++ndir;
                 char newpath[1024];
                 int i = 0, j = 0;
                 // debugf("oldpath:%s\n", path);
-                while (path[i] != '\0') {
-                    newpath[i] = path[i];
-                    ++i;
-                }
-                newpath[i++] = '/';
-                while (f.f_name[j] != '\0')
-                    newpath[i++] = f.f_name[j++];
-                newpath[i] = '\0';
+                strcpy(newpath, path);
+                // while (path[i] != '\0') {
+                //     newpath[i] = path[i];
+                //     ++i;
+                // }
+                mergepath(newpath, f.f_name);
+                // while (f.f_name[j] != '\0')
+                //     newpath[i++] = f.f_name[j++];
+                // newpath[i] = '\0';
                 // for (int k = 0; k <= i; ++k) {
                 //     debugf("%d", newpath[k]);
                 // }
@@ -50,6 +55,7 @@ void _tree(char *path, int dep) {
                 // debugf("%s\n", newpath);
                 _tree(newpath, dep + 1);
             }
+            else ++nfile;
         }
     }
     if (n > 0) {
@@ -63,8 +69,8 @@ void _tree(char *path, int dep) {
 int main(int argc, char **argv) {
     int i;
 
-    if (argc < 1) {
-        tree("/");
+    if (argc <= 1) {
+        tree("./");
     }
     else
         tree(argv[1]);
