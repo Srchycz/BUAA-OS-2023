@@ -1,0 +1,5 @@
+echo "This is a test for quotation"
+echo "ls | cat > aaa.txt"
+echo "Accepted! :)" | cat > aaa.txt
+cat "aaa.txt"
+echo "end"

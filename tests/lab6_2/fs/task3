@@ -1,0 +1,13 @@
+echo "This is a test for mkdir、touch and tree"
+touch reg1; touch reg2; touch reg3;
+mkdir dir1; mkdir dir1/dir1-dir1; touch dir1/dir1-f1
+mkdir dir2; mkdir dir2/dir2-dir1; touch dir2/dir2-f1; touch dir2/dir2-f2;
+mkdir dir3; mkdir dir3/dir3-dir1; touch dir3/dir3-f1; touch dir3/dir3-f2; touch dir3/dir3-f2
+touch dir3/dir3-dir1/t1; touch dir3/dir3-dir1/t2;
+echo "we expected 6 dirs"
+tree
+tree dir1
+tree dir2
+tree dir3
+echo "(*￣▽￣*)ブo" > edtxt
+cat edtxt

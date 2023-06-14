@@ -1,0 +1,26 @@
+echo "Let's make the filelist more complicated!"
+touch reg1; touch reg2; touch reg3;
+mkdir dir1; mkdir dir1/dir1-dir1; touch dir1/dir1-f1
+mkdir dir2; mkdir dir2/dir2-dir1; touch dir2/dir2-f1; touch dir2/dir2-f2;
+mkdir dir3; mkdir dir3/dir3-dir1; touch dir3/dir3-f1; touch dir3/dir3-f2; touch dir3/dir3-f2
+touch dir3/dir3-dir1/t1; touch dir3/dir3-dir1/t2;
+tree
+cd dir1
+echo "Now I'm in dir1"
+pwd
+tree
+cd ..
+echo "I'm back"
+cd dir2
+echo "Now I'm in dir2"
+cd ../dir3
+echo "I went straight to dir3"
+touch mark1
+touch dir3-dir1/mark2
+cd dir3-dir1
+touch mark3
+cd /
+touch mark4
+tree
+echo "We expected mark1 in /dir3/, mark2 && mark3 in /dir3/dir3-dir1/ and mark4 in /"
+echo "Good luck"

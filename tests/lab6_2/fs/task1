@@ -1,0 +1,4 @@
+echo Thisisatestforsemicolon
+ls; ls | cat; echo hello > aaa.txt;
+cat aaa.txt
+echo testend
