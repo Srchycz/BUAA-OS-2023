@@ -27,7 +27,7 @@ ifeq ($(call lab-ge,6), true)
 			testpiperace.x \
 			testptelibrary.x
 
-	USERLIB      += wait.o spawn.o pipe.o history.o
+	USERLIB      += wait.o spawn.o pipe.o history.o path.o
 	USERAPPS     := num.b  \
 			echo.b \
 			halt.b \
@@ -45,7 +45,8 @@ ifeq ($(call lab-ge,6), true)
 			tree.b \
 			mkdir.b \
 			touch.b \
-			history.b
+			history.b \
+			pwd.b
 endif
 
 USERLIB := $(addprefix lib/, $(USERLIB)) $(wildcard ../lib/*.o)

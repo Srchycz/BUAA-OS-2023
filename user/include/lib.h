@@ -68,6 +68,8 @@ int syscall_ipc_recv(void *dstva);
 int syscall_cgetc();
 int syscall_write_dev(void *, u_int, u_int);
 int syscall_read_dev(void *, u_int, u_int);
+int syscall_getworkdir(char *dst);
+int syscall_chworkdir(char *path);
 
 // ipc.c
 void ipc_send(u_int whom, u_int val, const void *srcva, u_int perm);
@@ -126,6 +128,10 @@ void history_init(void);
 void savecmd(char *buf);
 void getPrev(char *dst);
 void getNxt(char *dst);
+
+//path.c
+void cdup(char *path, int len);
+void mergepath(char *path, char *suffix);
 
 #define H_FORWARD 0
 #define H_BACKWARD 1

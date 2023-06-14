@@ -57,7 +57,7 @@ u_int sys_getenvid(void) {
  * Hint:
  *   This function will never return.
  */
-// void sys_yield(void);
+ // void sys_yield(void);
 void __attribute__((noreturn)) sys_yield(void) {
 	// Hint: Just use 'schedule' with 'yield' set.
 	/* Exercise 4.7: Your code here. */
@@ -141,7 +141,7 @@ int sys_mem_alloc(u_int envid, u_int va, u_int perm) {
 
 	/* Step 1: Check if 'va' is a legal user virtual address using 'is_illegal_va'. */
 	/* Exercise 4.4: Your code here. (1/3) */
-	if(is_illegal_va(va)) return -E_INVAL;
+	if (is_illegal_va(va)) return -E_INVAL;
 	/* Step 2: Convert the envid to its corresponding 'struct Env *' using 'envid2env'. */
 	/* Hint: **Always** validate the permission in syscalls! */
 	/* Exercise 4.4: Your code here. (2/3) */
@@ -173,8 +173,8 @@ int sys_mem_map(u_int srcid, u_int srcva, u_int dstid, u_int dstva, u_int perm) 
 	struct Page *pp;
 	/* Step 1: Check if 'srcva' and 'dstva' are legal user virtual addresses using
 	 * 'is_illegal_va'. */
-	/* Exercise 4.5: Your code here. (1/4) */
-	if(is_illegal_va(srcva) || is_illegal_va(dstva)) return -E_INVAL;
+	 /* Exercise 4.5: Your code here. (1/4) */
+	if (is_illegal_va(srcva) || is_illegal_va(dstva)) return -E_INVAL;
 	/* Step 2: Convert the 'srcid' to its corresponding 'struct Env *' using 'envid2env'. */
 	/* Exercise 4.5: Your code here. (2/4) */
 	try(envid2env(srcid, &srcenv, 1));
@@ -205,7 +205,7 @@ int sys_mem_unmap(u_int envid, u_int va) {
 
 	/* Step 1: Check if 'va' is a legal user virtual address using 'is_illegal_va'. */
 	/* Exercise 4.6: Your code here. (1/2) */
-	if(is_illegal_va(va)) return -E_INVAL;
+	if (is_illegal_va(va)) return -E_INVAL;
 	/* Step 2: Convert the envid to its corresponding 'struct Env *' using 'envid2env'. */
 	/* Exercise 4.6: Your code here. (2/2) */
 	try(envid2env(envid, &e, 1));
@@ -245,6 +245,8 @@ int sys_exofork(void) {
 	/* Exercise 4.9: Your code here. (4/4) */
 	e->env_status = ENV_NOT_RUNNABLE;
 	e->env_pri = curenv->env_pri;
+	// Copy the current workdirectory to the new env's workdir
+	strcpy(e->env_workdir, curenv->env_workdir);
 	return e->env_id;
 }
 
@@ -294,7 +296,7 @@ int sys_set_env_status(u_int envid, u_int status) {
  *  Returns the original error if other underlying calls fail.
  */
 int sys_set_trapframe(u_int envid, struct Trapframe *tf) {
-	if (is_illegal_va_range((u_long)tf, sizeof *tf)) {
+	if (is_illegal_va_range((u_long)tf, sizeof * tf)) {
 		return -E_INVAL;
 	}
 	struct Env *env;
@@ -304,7 +306,8 @@ int sys_set_trapframe(u_int envid, struct Trapframe *tf) {
 		// return `tf->regs[2]` instead of 0, because return value overrides regs[2] on
 		// current trapframe.
 		return tf->regs[2];
-	} else {
+	}
+	else {
 		env->env_tf = *tf;
 		return 0;
 	}
@@ -342,7 +345,7 @@ int sys_ipc_recv(u_int dstva) {
 	curenv->env_ipc_dstva = dstva;
 	/* Step 4: Set the status of 'curenv' to 'ENV_NOT_RUNNABLE' and remove it from
 	 * 'env_sched_list'. */
-	/* Exercise 4.8: Your code here. (3/8) */
+	 /* Exercise 4.8: Your code here. (3/8) */
 	curenv->env_status = ENV_NOT_RUNNABLE;
 	TAILQ_REMOVE(&env_sched_list, curenv, env_sched_link);
 	/* Step 5: Give up the CPU and block until a message is received. */
@@ -378,11 +381,11 @@ int sys_ipc_try_send(u_int envid, u_int value, u_int srcva, u_int perm) {
 	/* Step 2: Convert 'envid' to 'struct Env *e'. */
 	/* This is the only syscall where the 'envid2env' should be used with 'checkperm' UNSET,
 	 * because the target env is not restricted to 'curenv''s children. */
-	/* Exercise 4.8: Your code here. (5/8) */
+	 /* Exercise 4.8: Your code here. (5/8) */
 	try(envid2env(envid, &e, 0));
 	/* Step 3: Check if the target is waiting for a message. */
 	/* Exercise 4.8: Your code here. (6/8) */
-	if (e->env_ipc_recving == 0) 
+	if (e->env_ipc_recving == 0)
 		return -E_IPC_NOT_RECV;
 	/* Step 4: Set the target's ipc fields. */
 	e->env_ipc_value = value;
@@ -392,15 +395,15 @@ int sys_ipc_try_send(u_int envid, u_int value, u_int srcva, u_int perm) {
 
 	/* Step 5: Set the target's status to 'ENV_RUNNABLE' again and insert it to the tail of
 	 * 'env_sched_list'. */
-	/* Exercise 4.8: Your code here. (7/8) */
+	 /* Exercise 4.8: Your code here. (7/8) */
 	e->env_status = ENV_RUNNABLE;
 	TAILQ_INSERT_TAIL(&env_sched_list, e, env_sched_link);
 	/* Step 6: If 'srcva' is not zero, map the page at 'srcva' in 'curenv' to 'e->env_ipc_dstva'
 	 * in 'e'. */
-	/* Return -E_INVAL if 'srcva' is not zero and not mapped in 'curenv'. */
+	 /* Return -E_INVAL if 'srcva' is not zero and not mapped in 'curenv'. */
 	if (srcva != 0) {
 		/* Exercise 4.8: Your code here. (8/8) */
-		if((p = page_lookup(cur_pgdir, srcva, NULL)) == NULL)
+		if ((p = page_lookup(cur_pgdir, srcva, NULL)) == NULL)
 			return -E_INVAL;
 		try(page_insert(e->env_pgdir, e->env_asid, p, e->env_ipc_dstva, e->env_ipc_perm));
 	}
@@ -443,12 +446,12 @@ int sys_cgetc(void) {
  */
 int sys_write_dev(u_int va, u_int pa, u_int len) {
 	/* Exercise 5.1: Your code here. (1/2) */
-	if(is_illegal_va_range(va, len)) {
+	if (is_illegal_va_range(va, len)) {
 		return -E_INVAL;
 	}
-	if((DEV_CONS_ADDRESS <= pa && pa + len <= DEV_CONS_ADDRESS + DEV_CONS_LENGTH) ||
-	   (DEV_DISK_ADDRESS <= pa && pa + len <= DEV_DISK_ADDRESS + DEV_DISK_BUFFER + DEV_DISK_BUFFER_LEN) ||
-	   (DEV_RTC_ADDRESS <= pa && pa + len <= DEV_RTC_ADDRESS + DEV_RTC_LENGTH)) {
+	if ((DEV_CONS_ADDRESS <= pa && pa + len <= DEV_CONS_ADDRESS + DEV_CONS_LENGTH) ||
+		(DEV_DISK_ADDRESS <= pa && pa + len <= DEV_DISK_ADDRESS + DEV_DISK_BUFFER + DEV_DISK_BUFFER_LEN) ||
+		(DEV_RTC_ADDRESS <= pa && pa + len <= DEV_RTC_ADDRESS + DEV_RTC_LENGTH)) {
 		memcpy((void *)(pa + KSEG1), (void *)va, len);
 		return 0;
 	}
@@ -468,35 +471,51 @@ int sys_write_dev(u_int va, u_int pa, u_int len) {
  */
 int sys_read_dev(u_int va, u_int pa, u_int len) {
 	/* Exercise 5.1: Your code here. (2/2) */
-	if(is_illegal_va_range(va, len)) return -E_INVAL;
-	if((DEV_CONS_ADDRESS <= pa && pa + len <= DEV_CONS_ADDRESS + DEV_CONS_LENGTH) ||
-	   (DEV_DISK_ADDRESS <= pa && pa + len <= DEV_DISK_ADDRESS + DEV_DISK_BUFFER + DEV_DISK_BUFFER_LEN) ||
-	   (DEV_RTC_ADDRESS <= pa && pa + len <= DEV_RTC_ADDRESS + DEV_RTC_LENGTH)) {
+	if (is_illegal_va_range(va, len)) return -E_INVAL;
+	if ((DEV_CONS_ADDRESS <= pa && pa + len <= DEV_CONS_ADDRESS + DEV_CONS_LENGTH) ||
+		(DEV_DISK_ADDRESS <= pa && pa + len <= DEV_DISK_ADDRESS + DEV_DISK_BUFFER + DEV_DISK_BUFFER_LEN) ||
+		(DEV_RTC_ADDRESS <= pa && pa + len <= DEV_RTC_ADDRESS + DEV_RTC_LENGTH)) {
 		memcpy((void *)va, (void *)(pa + KSEG1), len);
 		return 0;
 	}
 	return -E_INVAL;
 }
 
+int sys_getworkdir(char *dst) {
+	strcpy(dst, curenv->env_workdir);
+	return 0;
+}
+
+int sys_chworkdir(char *path) {
+	int i = 0;
+	if (path[i] != '/') {
+		i = strlen(curenv->env_workdir);
+		strcpy(curenv->env_workdir + i, path);
+	}
+	return 0;
+}
+
 void *syscall_table[MAX_SYSNO] = {
-    [SYS_putchar] = sys_putchar,
-    [SYS_print_cons] = sys_print_cons,
-    [SYS_getenvid] = sys_getenvid,
-    [SYS_yield] = sys_yield,
-    [SYS_env_destroy] = sys_env_destroy,
-    [SYS_set_tlb_mod_entry] = sys_set_tlb_mod_entry,
-    [SYS_mem_alloc] = sys_mem_alloc,
-    [SYS_mem_map] = sys_mem_map,
-    [SYS_mem_unmap] = sys_mem_unmap,
-    [SYS_exofork] = sys_exofork,
-    [SYS_set_env_status] = sys_set_env_status,
-    [SYS_set_trapframe] = sys_set_trapframe,
-    [SYS_panic] = sys_panic,
-    [SYS_ipc_try_send] = sys_ipc_try_send,
-    [SYS_ipc_recv] = sys_ipc_recv,
-    [SYS_cgetc] = sys_cgetc,
-    [SYS_write_dev] = sys_write_dev,
-    [SYS_read_dev] = sys_read_dev,
+	[SYS_putchar] = sys_putchar,
+	[SYS_print_cons] = sys_print_cons,
+	[SYS_getenvid] = sys_getenvid,
+	[SYS_yield] = sys_yield,
+	[SYS_env_destroy] = sys_env_destroy,
+	[SYS_set_tlb_mod_entry] = sys_set_tlb_mod_entry,
+	[SYS_mem_alloc] = sys_mem_alloc,
+	[SYS_mem_map] = sys_mem_map,
+	[SYS_mem_unmap] = sys_mem_unmap,
+	[SYS_exofork] = sys_exofork,
+	[SYS_set_env_status] = sys_set_env_status,
+	[SYS_set_trapframe] = sys_set_trapframe,
+	[SYS_panic] = sys_panic,
+	[SYS_ipc_try_send] = sys_ipc_try_send,
+	[SYS_ipc_recv] = sys_ipc_recv,
+	[SYS_cgetc] = sys_cgetc,
+	[SYS_write_dev] = sys_write_dev,
+	[SYS_read_dev] = sys_read_dev,
+	[SYS_getworkdir] = sys_getworkdir,
+	[SYS_chworkdir] = sys_chworkdir
 };
 
 /* Overview:
@@ -535,6 +554,6 @@ void do_syscall(struct Trapframe *tf) {
 	arg5 = *((u_int *)(tf->regs[29]) + 5);
 	/* Step 5: Invoke 'func' with retrieved arguments and store its return value to $v0 in 'tf'.
 	 */
-	/* Exercise 4.2: Your code here. (4/4) */
-    tf->regs[2] = func(arg1, arg2, arg3, arg4, arg5);
+	 /* Exercise 4.2: Your code here. (4/4) */
+	tf->regs[2] = func(arg1, arg2, arg3, arg4, arg5);
 }

@@ -74,3 +74,15 @@ int syscall_read_dev(void *va, u_int dev, u_int len) {
 	/* Exercise 5.2: Your code here. (2/2) */
 	return msyscall(SYS_read_dev, va, dev, len);
 }
+
+int syscall_getworkdir(char *dst) {
+	return msyscall(SYS_getworkdir, dst);
+}
+
+// Overview:
+// change the curenv's workdirectory
+// Pre-condition:
+// ensure the path is legal and has no character '.'
+int syscall_chworkdir(char *path) {
+	return msyscall(SYS_chworkdir, path);
+}
