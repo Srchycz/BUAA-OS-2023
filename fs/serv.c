@@ -230,6 +230,7 @@ void serve_create(u_int envid, struct Fsreq_create *req) {
 		return;
 	}
 
+	file_close(f);
 	ipc_send(envid, 0, 0, 0);
 }
 

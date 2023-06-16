@@ -58,6 +58,7 @@ void _tree(char *path, int dep) {
             else ++nfile;
         }
     }
+    close(fd);
     if (n > 0) {
         user_panic("short read in directory %s", path);
     }
